@@ -99,20 +99,6 @@ web_search({ queries: ["query 1", "query 2"], workflow: "summary-review" })
 | `includeContent` | Fetch full page content from sources in background |
 | `workflow` | `none` (skip curator) or `summary-review` (auto-generate summary draft after search completion, default) |
 
-### code_search
-
-Search for code examples, documentation, and API references via Exa MCP. No API key required. Uses Exa's code-context MCP tool when available and falls back to code-focused web search when that tool is unavailable.
-
-```typescript
-code_search({ query: "React useEffect cleanup pattern" })
-code_search({ query: "Express middleware error handling", maxTokens: 10000 })
-```
-
-| Parameter | Description |
-|-----------|-------------|
-| `query` | Programming question, API, library, or debugging topic |
-| `maxTokens` | Maximum tokens of context to return (default: 5000, max: 50000) |
-
 ### fetch_content
 
 Fetch URL(s) and extract readable content as markdown. Automatically detects and handles GitHub repos, YouTube videos, PDFs, local video files, and regular web pages.
@@ -341,7 +327,6 @@ Rate limits: Perplexity is capped at 10 requests/minute (client-side). Content f
 | `parallel.ts` | Parallel search provider and extraction fallback |
 | `tavily.ts` | Tavily Search API provider |
 | `exa.ts` | Exa.ai search provider — direct API and MCP proxy |
-| `code-search.ts` | Code/docs search via Exa MCP |
 | `extract.ts` | URL/file path routing, HTTP extraction, fallback orchestration |
 | `gemini-search.ts` | Search routing across OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, Gemini API, Gemini Web |
 | `gemini-url-context.ts` | Gemini URL Context + Web extraction fallbacks |

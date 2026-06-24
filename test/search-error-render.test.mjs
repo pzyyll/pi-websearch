@@ -83,7 +83,7 @@ test("plain (non-cancel) error stays a clean single line — no diagnostic noise
 	assert.equal(plan.expandHint, null, "plain error must have no expand hint");
 });
 
-// --- other tools (code_search / fetch_content / get_search_content): the same
+// --- other tools (fetch_content / get_search_content): the same
 // dead-end exists in their renderResults; they now reuse buildSearchErrorPlan via
 // extraLines. These pin that non-cancel errors with detail become expandable
 // WITHOUT the curator/browser diagnostics (which are web_search-only). ---
@@ -104,7 +104,7 @@ test("fetch_content-style error (extras, no cancel) is expandable without browse
 	assert.match(plan.expandHint, /ctrl\+o to expand/i);
 });
 
-test("code_search-style error with a failed query shows the query in extras", () => {
+test("non-search error with extras shows detail without browser diagnostics", () => {
 	const plan = buildSearchErrorPlan({
 		error: "Exa search failed: connection reset",
 		extraLines: ["query: how to use p-limit concurrency"],
@@ -115,8 +115,8 @@ test("code_search-style error with a failed query shows the query in extras", ()
 	assert.equal(typeof plan.expandHint, "string");
 });
 
-test("error with NO extras and NO cancel stays single-line (code_search without query)", () => {
-	// e.g. code_search with no query arg — nothing to diagnose.
+test("error with NO extras and NO cancel stays single-line", () => {
+	// e.g. fetch_content with no url — nothing to diagnose.
 	const plan = buildSearchErrorPlan({ error: "Some transient error" });
 	assert.notEqual(plan, null);
 	assert.equal(plan.expanded.length, 1);
@@ -144,12 +144,12 @@ test("index.ts imports buildSearchErrorPlan and wires it into the web_search err
 	// (mutation: dropping the partial arg reverts to the discarded-results bug).
 	assert.match(indexSrc, /buildCurationCancelledReturn\(reason, \{/);
 	assert.match(indexSrc, /cancelledQueries/);
-	// the 3 other tools must also delegate to buildSearchErrorPlan (mutation-proof:
+	// the 2 other tools must also delegate to buildSearchErrorPlan (mutation-proof:
 	// reverting any of them to the bare single-line drops its buildSearchErrorPlan call).
-	// Count call sites: web_search + code_search + fetch_content + get_search_content = 4.
+	// Count call sites: web_search + fetch_content + get_search_content = 3.
 	const callSiteCount = (indexSrc.match(/const plan = buildSearchErrorPlan\(/g) || []).length;
-	assert.equal(callSiteCount, 4, `expected 4 buildSearchErrorPlan call sites, got ${callSiteCount}`);
-	// renderSearchErrorPlan shared renderer is used by all 4.
+	assert.equal(callSiteCount, 3, `expected 3 buildSearchErrorPlan call sites, got ${callSiteCount}`);
+	// renderSearchErrorPlan shared renderer is used by all 3.
 	const renderCount = (indexSrc.match(/return renderSearchErrorPlan\(plan, expanded, theme\)/g) || []).length;
-	assert.equal(renderCount, 4, `expected 4 renderSearchErrorPlan returns, got ${renderCount}`);
+	assert.equal(renderCount, 3, `expected 3 renderSearchErrorPlan returns, got ${renderCount}`);
 });

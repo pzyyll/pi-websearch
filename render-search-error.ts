@@ -40,7 +40,7 @@ export interface SearchErrorDetails {
 	/** Partial per-query results gathered before the cancel/error. */
 	cancelledQueries?: CancelledQueryDetail[];
 	/** Arbitrary extra diagnostic lines (e.g. URLs, response id) for non-cancel errors
-	 * like code_search / fetch_content / get_search_content. Shown in the expanded view. */
+	 * like fetch_content / get_search_content. Shown in the expanded view. */
 	extraLines?: string[];
 }
 
@@ -77,7 +77,7 @@ export function buildSearchErrorPlan(details: SearchErrorDetails | undefined | n
 	// Rich diagnostics only make sense when there is something to diagnose: a
 	// cancelled/curator result with partial data, OR a non-cancel error that carries
 	// extra detail (urls/response-id for fetch_content, the failed query for
-	// code_search/get_search_content). A bare argument error (e.g. "No URL
+	// get_search_content). A bare argument error (e.g. "No URL
 	// provided") stays a clean single line -- no noise.
 	const extras = details.extraLines ?? [];
 	const rich = details.cancelled === true || queries.length > 0 || extras.length > 0;
@@ -86,7 +86,7 @@ export function buildSearchErrorPlan(details: SearchErrorDetails | undefined | n
 	}
 
 	// --- diagnostics block (expanded): curator/cancel-specific only. For non-cancel
-	// errors (fetch_content/code_search/get_search_content) there is no browser or
+	// errors (fetch_content/get_search_content) there is no browser or
 	// query-curation state to report, so we skip this block and show only Details. ---
 	const expanded: string[] = [headline, ""];
 
