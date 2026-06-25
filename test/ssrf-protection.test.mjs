@@ -169,6 +169,17 @@ test("allowRanges rejects an empty or non-numeric CIDR prefix instead of treatin
 	);
 });
 
+test("allowRanges rejects all-address /0 CIDRs", async () => {
+	await assert.rejects(
+		validateRemoteUrl("http://169.254.169.254/", { allowRanges: ["0.0.0.0/0"] }),
+		/Invalid CIDR notation in ssrf\.allowRanges/,
+	);
+	await assert.rejects(
+		validateRemoteUrl("http://[fd00::1]/", { allowRanges: ["::/0"] }),
+		/Invalid CIDR notation in ssrf\.allowRanges/,
+	);
+});
+
 test("invalid allowRanges entries throw a descriptive error", async () => {
 	for (const bad of ["not-an-ip", "198.18.0.0/33", "198.18.0.0/-1", "999.0.0.0/8", "fd00::/129"]) {
 		await assert.rejects(

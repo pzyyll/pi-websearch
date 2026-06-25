@@ -209,14 +209,14 @@ function parseCidr(raw: string): ParsedCidr | null {
 		const bytes = ipv4ToBytes(addrPart);
 		if (!bytes) return null;
 		const prefix = prefixPart === null ? 32 : Number(prefixPart);
-		if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) return null;
+		if (!Number.isInteger(prefix) || prefix < 1 || prefix > 32) return null;
 		return { bytes, prefix };
 	}
 	if (version === 6) {
 		const groups = parseIPv6(addrPart);
 		if (!groups) return null;
 		const prefix = prefixPart === null ? 128 : Number(prefixPart);
-		if (!Number.isInteger(prefix) || prefix < 0 || prefix > 128) return null;
+		if (!Number.isInteger(prefix) || prefix < 1 || prefix > 128) return null;
 		return { bytes: ipv6GroupsToBytes(groups), prefix };
 	}
 	return null;

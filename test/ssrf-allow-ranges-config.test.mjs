@@ -62,6 +62,15 @@ test("loadSsrfAllowRanges throws when ssrf.allowRanges is not an array", async (
 	}
 });
 
+test("loadSsrfAllowRanges throws when an ssrf.allowRanges entry is not a string", async () => {
+	const { root, agentDir, configPath } = await makeConfigDir("pi-ssrf-entry-type-");
+	await writeFile(configPath, JSON.stringify({ ssrf: { allowRanges: ["198.18.0.0/15", 123] } }), "utf8");
+
+	const result = runLoad(envFor(root, agentDir));
+	assert.equal(result.ok, false);
+	assert.match(result.error, /ssrf\.allowRanges in .* must contain only CIDR strings; entry 2 is number/);
+});
+
 test("loadSsrfAllowRanges returns trimmed, non-empty CIDR strings for a valid array", async () => {
 	const { root, agentDir, configPath } = await makeConfigDir("pi-ssrf-valid-");
 	await writeFile(

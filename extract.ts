@@ -43,10 +43,15 @@ export function loadSsrfAllowRanges(): string[] {
 	if (!Array.isArray(value)) {
 		throw new Error(`ssrf.allowRanges in ${WEB_SEARCH_CONFIG_PATH} must be an array of CIDR strings`);
 	}
-	return value
-		.filter((entry): entry is string => typeof entry === "string")
-		.map(entry => entry.trim())
-		.filter(entry => entry.length > 0);
+	const ranges: string[] = [];
+	for (const [index, entry] of value.entries()) {
+		if (typeof entry !== "string") {
+			throw new Error(`ssrf.allowRanges in ${WEB_SEARCH_CONFIG_PATH} must contain only CIDR strings; entry ${index + 1} is ${typeof entry}`);
+		}
+		const trimmed = entry.trim();
+		if (trimmed) ranges.push(trimmed);
+	}
+	return ranges;
 }
 
 function errorMessage(err: unknown): string {
