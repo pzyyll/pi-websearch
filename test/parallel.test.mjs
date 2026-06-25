@@ -129,7 +129,10 @@ test("fetch_content continues to Gemini when Parallel extract fails", async () =
 			throw new Error("Unexpected fetch " + urlText);
 		};
 		const { extractContent } = await import(${JSON.stringify(extractModuleUrl)});
-		const result = await extractContent("https://example.com/app");
+		// Inject DNS so SSRF validation never depends on real resolution (which a
+		// local fake-IP/TUN proxy would map into a blocked reserved range).
+		const lookup = async () => [{ address: "93.184.216.34", family: 4 }];
+		const result = await extractContent("https://example.com/app", undefined, { lookup });
 		console.log(JSON.stringify({ calls, result }));
 	`, { HOME: home, USERPROFILE: home, PARALLEL_API_KEY: "pk_live_parallel_test_key" });
 
