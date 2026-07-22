@@ -13,6 +13,7 @@ export default defineConfig({
   sourcemap: true,
   // Keep package dependencies and peer deps external (Node resolves them at runtime).
   // Local dynamic imports become separate chunks so boot stays light.
-  fixedExtension: true,
+  // package.json has "type": "module", so emit .js (not .mjs via fixedExtension).
+  fixedExtension: false,
   failOnWarn: false,
 });
