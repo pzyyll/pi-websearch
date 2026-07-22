@@ -23,12 +23,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pzyyll/pi-mcp.git"
+    "url": "git+https://github.com/pzyyll/pi-websearch.git"
   },
   "bugs": {
-    "url": "https://github.com/pzyyll/pi-mcp/issues"
+    "url": "https://github.com/pzyyll/pi-websearch/issues"
   },
-  "homepage": "https://github.com/pzyyll/pi-mcp#readme",
+  "homepage": "https://github.com/pzyyll/pi-websearch#readme",
   "files": [
     "dist",
     "skills",
