@@ -5,20 +5,24 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+
 - Deferred heavy search/extract/curator modules and npm deps (`linkedom`, Readability, Turndown, provider clients, `curator-page`) behind cached dynamic imports so extension cold-start no longer evaluates the full feature graph at module load.
 - Prebuild the extension with `tsdown` to `dist/` and point `pi.extensions` at `./dist/index.mjs` so Pi loads compiled ESM (with lazy chunks) instead of jiti-transpiling TypeScript sources at boot. Run `npm run build` after source changes.
 
 ## [0.13.0] - 2026-06-25
 
 ### Added
+
 - Added `ssrf.allowRanges` config to exempt CIDR ranges (e.g. `198.18.0.0/15`) from the SSRF guard, so `fetch_content`/`web_search` work on hosts whose network proxy runs in TUN + fake-IP mode (Surge, Clash, Mihomo, Stash, ...) where public domains resolve into a synthetic reserved range. Off by default. Thanks @TianZuo555 for reporting #101 and PR #102.
 
 ### Fixed
+
 - Hardened `ssrf.allowRanges` validation to reject all-address `/0` CIDRs and non-string entries.
 
 ## [0.12.0] - 2026-06-24
 
 ### Added
+
 - Added `webSearch.enabled` config to disable `web_search` tool registration. Thanks @webwarrior-ws for PR #38 and @knocte for reporting #22.
 - Added `workflow: "auto-summary"` for `web_search` to generate a summary without opening the browser curator. Thanks @Ilm-Alan for PR #57 and @baflow for reporting #32.
 - Added Tavily Search API provider support with `TAVILY_API_KEY` / `tavilyApiKey`, domain filters, recency filters, and auto-provider fallback integration.
@@ -27,9 +31,11 @@ All notable changes to this project will be documented in this file.
 - Added `GOOGLE_GEMINI_BASE_URL` / `geminiBaseUrl` for routing Gemini generate-content calls through compatible gateways, plus `CLOUDFLARE_API_KEY` / `cloudflareApiKey` authentication for Cloudflare AI Gateway. Thanks @meatballhat-cf for PR #76 and @tynril for reporting #74.
 
 ### Removed
+
 - Removed the deprecated `code_search` tool that duplicated the Exa search provider from `web_search`. Thanks @picasso250 for PR #62 and reporting #61.
 
 ### Fixed
+
 - Kept curator sessions alive when browser auto-open fails and surfaced a copyable curator URL for Docker, WSL, and headless environments. Thanks @rca, @runningman84, and @k0valik for reporting #92, #93, and #55.
 - Updated `@mozilla/readability` to `^0.6.0` for GHSA-3p6v-hrg8-8qj7. Thanks @omar-elmountassir for reporting #86, and @henriquebastos and @av1155 for PRs #35 and #68.
 - Limited curator summary model selection to Pi `enabledModels` when configured, and fall back to a deterministic no-billing summary instead of silently calling unrelated catalog models. Thanks @Horace1423 for reporting #73.
@@ -41,29 +47,35 @@ All notable changes to this project will be documented in this file.
 ## [0.11.0] - 2026-06-24
 
 ### Added
+
 - Added OpenAI Responses API web search with Codex subscription auth, OpenAI API key auth, required web-search tool use, model-registry header forwarding, and source extraction from citations and web-search sources.
 - Added Brave Search API provider with `BRAVE_API_KEY` / `braveApiKey`, freshness mapping, and domain include/exclude handling.
 - Added OpenAI and Brave to `auto` provider routing, explicit `provider` selection, curator provider buttons, provider tags, and provider availability checks.
 
 ### Changed
+
 - Updated extension imports for Pi 0.80.x, including the `@earendil-works` package namespace, `.ts` local module specifiers, and the `@earendil-works/pi-ai/compat` entrypoint for legacy model helpers.
 - Declared Pi-bundled packages as peer dependencies so Pi can provide its runtime aliases when loading the extension.
 
 ### Fixed
+
 - Aligned custom message display values and widget clearing with the current Pi extension API types.
 - Surfaced real YouTube Gemini API failures instead of replacing them with the generic Chrome/API-key guidance.
 - Kept Brave snippets out of `inlineContent` so `includeContent` searches still fetch full page content through the background extraction pipeline.
 - Prevented constrained auto searches from silently losing recency/count constraints by preferring Exa/Brave over OpenAI when OpenAI cannot enforce them strictly.
 
 ### Removed
+
 - Removed the committed `package-lock.json` from the extension package and ignored future lockfiles.
 
 ## [0.10.7] - 2026-05-02
 
 ### Added
+
 - Added `summaryModel` config for choosing the default curator summary draft model from `~/.pi/web-search.json`.
 
 ### Fixed
+
 - Made Gemini Web browser-cookie access opt-in via `allowBrowserCookies` or `PI_ALLOW_BROWSER_COOKIES=1`, preventing surprise macOS Keychain prompts during provider checks.
 - Restored `code_search` after Exa removed the `get_code_context_exa` MCP tool by falling back to `web_search_exa` with code-focused queries.
 - Migrated extension tool schemas from `@sinclair/typebox` to Pi's bundled `typebox` 1.x import path.
@@ -71,17 +83,20 @@ All notable changes to this project will be documented in this file.
 ## [0.10.6] - 2026-04-04
 
 ### Changed
+
 - Added `promptSnippet` metadata for `web_search`, `code_search`, `fetch_content`, and `get_search_content` so Pi 0.59+ includes these tools in the default prompt tool section and improves discoverability of research/fetch flows.
 
 ## [0.10.5] - 2026-04-03
 
 ### Fixed
+
 - Forward dynamic request `headers` from `ctx.modelRegistry.getApiKeyAndHeaders()` into `complete()` for query rewriting and summary generation, finishing the pi 0.63+ auth migration for providers that require per-request headers.
 - Removed legacy `session_switch`/`session_fork` lifecycle listeners and rely on immutable-session `session_start` reinitialization.
 
 ## [0.10.4] - 2026-03-27
 
 ### Added
+
 - **Workflow-based curator hard cutover (`workflow`).** Replaced `curate` with `workflow: "none" | "summary-review"`, added summary-review approval flow with `POST /summarize`, made summary text the primary returned output while retaining raw curated evidence in `details`, and switched timeout handling to submit-first with deterministic summary fallback when no approved draft exists.
 - **Auto-open curator for all `web_search` runs (single + multi query).** Searches now open the curator window immediately and stream results live for review workflows; the old countdown/auto-condense fallback path was removed.
 - **Exa.ai search provider.** Neural/semantic search available alongside Perplexity and Gemini. 1,000 free requests/month. Set `EXA_API_KEY` env var or `exaApiKey` in `~/.pi/web-search.json`, or select explicitly with `provider: "exa"`. Includes built-in content extraction — when `includeContent` is true, full page text comes back with search results instead of requiring a separate background fetch. Monthly usage tracked in `~/.pi/exa-usage.json` with a warning at 80%.
@@ -109,15 +124,18 @@ All notable changes to this project will be documented in this file.
 - **Batch provider search shows searching cards immediately.** Clicking a provider button now creates placeholder cards with loading animations upfront instead of waiting for results to arrive.
 
 ### Changed
+
 - Exa search now always requests text content from both direct API and MCP paths (3000 chars default, 50000 with `includeContent`) instead of requesting highlights only. Ensures consistent answer quality regardless of whether Exa returns highlight snippets.
 - Adapted model registry calls to pi SDK changes: `getApiKey()` → `getApiKeyAndHeaders()` in `index.ts` and `summary-review.ts`, and `getAvailable()` from async to sync.
 - Hoisted dynamic `await import()` calls to static top-level imports in `gemini-web.ts`, `video-extract.ts`, and `youtube-extract.ts`.
 - Removed legacy `session_switch`/`session_fork` lifecycle listeners and rely on immutable-session `session_start` reinitialization.
 
 ### Removed
+
 - **`result-review` workflow.** Hard cutover — only `"none"` and `"summary-review"` remain. Removed from `WebSearchWorkflow` type, `resolveWorkflow()`, tool schema, `/websearch` command, and `/curator` command.
 
 ### Fixed
+
 - Summary generation no longer hard-fails on empty model payloads (`content parts: none`): empty-response failures now fall back to deterministic summary output with explicit fallback metadata (`fallbackReason: "summary-model-empty-response"`) instead of surfacing a terminal UI error.
 - Deterministic fallback summaries now strip trailing `Source:`/`Sources:` boilerplate from provider answer text before building query previews, preventing noisy source-list dumps from replacing actual summary prose. Fixed regex matching so `Source:` tokens at the start of provider answers are correctly detected and removed.
 - Curator now allows provider switching and add-search actions while summary generation is running. User-initiated search mutations supersede the in-flight summary request client-side and return the UI to results mode so searching can continue without waiting for draft completion.
@@ -172,11 +190,13 @@ All notable changes to this project will be documented in this file.
 ## [0.10.3] - 2026-03-12
 
 ### Added
+
 - `/google-account` command to report the active Google account currently authenticated for Gemini Web.
 - `chromeProfile` config support for targeting a non-default Chromium profile when reading Gemini Web cookies.
 - `searchModel` config support for overriding the Gemini API model used by `web_search`.
 
 ### Changed
+
 - Chromium cookie extraction now tries Helium, Chrome, and Arc on macOS, plus Chromium and Chrome on Linux, with profile-aware cookie paths and per-platform key handling.
 - Gemini Web availability checks now pass required cookie names into cookie extraction and can look up the active signed-in Google account without changing existing `isGeminiWebAvailable()` callers.
 - README documentation now covers macOS/Linux cookie extraction limits, the new config fields, the `/google-account` command, and the expanded `chrome-cookies.ts` role.
@@ -184,6 +204,7 @@ All notable changes to this project will be documented in this file.
 ## [0.10.2] - 2026-02-18
 
 ### Added
+
 - **Interactive search curation.** Press Ctrl+Shift+S during or after a multi-query search to open a browser-based review UI. Results stream in live via SSE. Pick which queries to keep, add new searches on the fly, switch providers — then submit to send only the curated results to the agent.
 - **Auto-condense pipeline.** When the countdown expires without manual curation, a single LLM call (Claude Haiku by default) condenses all search results into a deduplicated briefing organized by topic. Preprocessing enriches the prompt with URL overlap, answer similarity, and source quality analysis. Configure via `"autoFilter"` in `~/.pi/web-search.json`. Full uncondensed results stored and retrievable via `get_search_content`.
 - **Configurable keyboard shortcuts.** Both shortcuts (curate: Ctrl+Shift+S, activity monitor: Ctrl+Shift+W) can be remapped via `"shortcuts"` in `~/.pi/web-search.json`. Changes take effect on restart.
@@ -199,6 +220,7 @@ All notable changes to this project will be documented in this file.
 - Dark/light theme via `prefers-color-scheme` with teal accent palette.
 
 ### Changed
+
 - **Curate enabled by default.** Multi-query searches show a 10-second review window; single queries send immediately. Pass `curate: false` to opt out.
 - **Curate shortcut opens browser immediately, even mid-search.** Remaining results stream in live via SSE.
 - **Tool descriptions encourage multi-query research.** The `queries` param explains how to vary phrasing and scope across 2-4 queries, with good/bad examples.
@@ -208,10 +230,12 @@ All notable changes to this project will be documented in this file.
 - Config helpers generalized from `loadSavedProvider`/`saveProvider` to `loadConfig`/`saveConfig`.
 
 ### Fixed
+
 - Curated `onSubmit` passed the original full query list instead of the filtered list, inflating `queryCount`.
 - Collapsed curated status mixed source URL counts with query counts.
 
 ### New files
+
 - `curator-server.ts` — ephemeral HTTP server with SSE streaming, state machine, heartbeat watchdog, and token auth.
 - `curator-page.ts` — HTML/CSS/JS for the curator UI with markdown rendering and overlay transitions.
 - `search-filter.ts` — auto-condense pipeline: preprocessing, LLM condensation via pi's model registry, and post-processing (citation verification, source list completion).
@@ -219,36 +243,43 @@ All notable changes to this project will be documented in this file.
 ## [0.7.3] - 2026-02-05
 
 ### Added
+
 - Jina Reader fallback for JS-rendered pages. When Readability returns insufficient content (cookie notices, consent walls, SPA shells), the extraction chain now tries Jina Reader (`r.jina.ai`) before falling back to Gemini. Jina handles JavaScript rendering server-side and returns clean markdown. No API key required.
 - JS-render detection heuristic (`isLikelyJSRendered`) produces more specific error messages when pages appear to load content dynamically.
 - Actionable guidance when all extraction methods fail, listing steps to configure Gemini API or use `web_search` instead.
 
 ### Changed
+
 - HTTP fetch headers now mimic Chrome (realistic `User-Agent`, `Sec-Fetch-*`, `Accept-Language`) instead of the default Node.js user agent. Reduces blocks from bot-detection systems.
 - Short Readability output (< 500 chars) is now treated as a content failure, triggering the fallback chain. Previously, a 266-char cookie notice was returned as "successful" content.
 - Extraction fallback order is now: HTTP+Readability → RSC → Jina Reader → Gemini URL Context → Gemini Web → error with guidance.
 
 ### Fixed
+
 - `parseTimestamp` now rejects negative values in colon-separated format (`-1:30`, `1:-30`). Previously only the numeric path (`-90`) rejected negatives, while the colon path computed and returned negative seconds.
 
 ## [0.7.2] - 2026-02-03
 
 ### Added
+
 - `model` parameter on `fetch_content` to override the Gemini model per-request (e.g. `model: "gemini-2.5-flash"`)
 - Collapsed TUI results now show a 200-char text preview instead of just the status line
 - LICENSE file (MIT)
 
 ### Changed
+
 - Default Gemini model updated from `gemini-2.5-flash` to `gemini-3-flash-preview` across all API, search, URL context, YouTube, and video paths. Gemini Web gracefully falls back to `gemini-2.5-flash` when the model header isn't available.
 - README rewritten: added tagline, badges, "Why" section, Quick Start, corrected "How It Works" routing order, fixed inaccurate env var precedence claim, added missing `/v/` YouTube format, restored `/search` command docs, collapsible Files table
 
 ### Fixed
+
 - `PERPLEXITY_API_KEY` env var now takes precedence over config file value, matching `GEMINI_API_KEY` behavior and README documentation (was reversed)
 - `package.json` now includes `repository`, `homepage`, `bugs`, and `description` fields (repo link was missing from pi packages site)
 
 ## [0.7.0] - 2026-02-03
 
 ### Added
+
 - **Multi-provider web search**: `web_search` now supports Perplexity, Gemini API (with Google Search grounding), and Gemini Web (cookie auth) as search providers. New `provider` parameter (`auto`, `perplexity`, `gemini`) controls selection. In `auto` mode (default): Perplexity → Gemini API → Gemini Web. Backwards-compatible — existing Perplexity users see no change.
 - **Gemini API grounded search**: Structured citations via `groundingMetadata` with source URIs and text-to-source mappings. Google proxy URLs are resolved via HEAD redirects. Configured via `GEMINI_API_KEY` or `geminiApiKey` in config.
 - **Gemini Web search**: Zero-config web search for users signed into Google in Chrome. Prompt instructs Gemini to cite sources; URLs extracted from markdown response.
@@ -262,6 +293,7 @@ All notable changes to this project will be documented in this file.
 - `video` config section: `enabled`, `preferredModel`, `maxSizeMB`
 
 ### Changed
+
 - `PerplexityResponse` renamed to `SearchResponse` (shared interface for all search providers)
 - Extracted HTTP pipeline from `extractContent` into `extractViaHttp` for cleaner Gemini fallback orchestration
 - `getApiKey()`, `API_BASE`, `DEFAULT_MODEL` exported from `gemini-api.ts` for use by search and URL Context modules
@@ -272,6 +304,7 @@ All notable changes to this project will be documented in this file.
 - Shared helpers in `utils.ts` (`formatSeconds`, error mapping) eliminate circular imports and duplication across youtube-extract.ts and video-extract.ts
 
 ### Fixed
+
 - `fetch_content` TUI rendered `undefined/undefined URLs` during progress updates (renderResult didn't handle `isPartial`, now shows a progress bar like `web_search` does)
 - RSC extractor produced malformed markdown for `<pre><code>` blocks (backticks inside fenced code blocks) -- extremely common on Next.js documentation pages
 - Multi-URL fetch failures rendered in green "success" color even when 0 URLs succeeded (now red)
@@ -283,6 +316,7 @@ All notable changes to this project will be documented in this file.
 - YouTube thumbnail assignment no longer sets `null` on the optional `thumbnail` field when fetch fails (was a type mismatch; now only assigned on success)
 
 ### New files
+
 - `gemini-search.ts` -- search routing + Gemini Web/API search providers with grounding
 - `gemini-url-context.ts` -- URL Context API extraction + Gemini Web extraction fallback
 - `video-extract.ts` -- local video file detection, Gemini Web/API analysis with Files API upload
@@ -291,6 +325,7 @@ All notable changes to this project will be documented in this file.
 ## [0.6.0] - 2026-02-02
 
 ### Added
+
 - YouTube video understanding in `fetch_content` via three-tier fallback chain:
   - **Gemini Web** (primary): reads Chrome session cookies from macOS Keychain + SQLite, authenticates to gemini.google.com, sends YouTube URL via StreamGenerate endpoint. Full visual + audio understanding with timestamps. Zero config needed if signed into Google in Chrome.
   - **Gemini API** (secondary): direct REST calls with `GEMINI_API_KEY`. YouTube URLs passed as `file_data.file_uri`. Configure via `GEMINI_API_KEY` env var or `geminiApiKey` in `~/.pi/web-search.json`.
@@ -301,6 +336,7 @@ All notable changes to this project will be documented in this file.
 - YouTube URLs no longer fall through to HTTP/Readability (which returns garbage); returns error instead
 
 ### New files
+
 - `chrome-cookies.ts` -- macOS Chrome cookie extraction using Node builtins (`node:crypto`, `node:sqlite`, `child_process`)
 - `gemini-web.ts` -- Gemini Web client ported from surf's gemini-client.cjs (cookie auth, StreamGenerate, model fallback)
 - `gemini-api.ts` -- Gemini REST API client (generateContent, file upload/processing/cleanup for Phase 2)
@@ -309,9 +345,11 @@ All notable changes to this project will be documented in this file.
 ## [0.5.1] - 2026-02-02
 
 ### Added
+
 - Bundled `librarian` skill -- structured research workflow for open-source libraries with GitHub permalinks, combining fetch_content (cloning), web_search (recent info), and git operations (blame, log, show)
 
 ### Fixed
+
 - Session fork event handler was registered as `session_branch` (non-existent event) instead of `session_fork`, meaning forks never triggered cleanup (abort pending fetches, clear clone cache, restore session data)
 - API fallback title for tree URLs with a path (e.g. `/tree/main/src`) now includes the path (`owner/repo - src`), consistent with clone-based results
 - Removed unnecessary export on `getDefaultBranch` (only used internally by `fetchViaApi`)
@@ -319,6 +357,7 @@ All notable changes to this project will be documented in this file.
 ## [0.5.0] - 2026-02-01
 
 ### Added
+
 - GitHub repository clone extraction for `fetch_content` -- detects GitHub code URLs, clones repos to `/tmp/pi-github-repos/`, and returns actual file contents plus local path for further exploration with `read` and `bash`
 - Lightweight API fallback for oversized repos (>350MB) and commit SHA URLs via `gh api`
 - Clone cache with concurrent request deduplication (second request awaits first's clone)
@@ -328,25 +367,30 @@ All notable changes to this project will be documented in this file.
 - README: GitHub clone documentation with config, flow diagram, and limitations
 
 ### Changed
+
 - Refactored `extractContent`/`fetchAllContent` signatures from positional `timeoutMs` to `ExtractOptions` object
 - Blob/tree fetch titles now include file path (e.g. `owner/repo - src/index.ts`) for better disambiguation in multi-URL results and TUI
 
 ### Fixed
+
 - README: Activity monitor keybinding corrected from `Ctrl+Shift+O` to `Ctrl+Shift+W`
 
 ## [0.4.5] - 2026-02-01
 
 ### Changed
+
 - Added package keywords for npm discoverability
 
 ## [0.4.4] - 2026-02-01
 
 ### Fixed
+
 - Adapt execute signatures to pi v0.51.0: reorder signal, onUpdate, ctx parameters across all three tools
 
 ## [0.4.3] - 2026-01-27
 
 ### Fixed
+
 - Google API compatibility: Use `StringEnum` for `recencyFilter` to avoid unsupported `anyOf`/`const` JSON Schema patterns
 
 ## [0.4.2] - 2026-01-27
@@ -367,6 +411,7 @@ All notable changes to this project will be documented in this file.
 ## [0.4.1] - 2026-01-26
 
 ### Changed
+
 - Added `pi` manifest to package.json for pi v0.50.0 package system compliance
 - Added `pi-package` keyword for npm discoverability
 

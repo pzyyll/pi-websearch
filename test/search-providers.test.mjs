@@ -12,32 +12,33 @@ const tavilyModuleUrl = new URL("../src/tavily.ts", import.meta.url).href;
 const searchModuleUrl = new URL("../src/gemini-search.ts", import.meta.url).href;
 
 function runChild(script, env) {
-	const childEnv = { ...process.env };
-	for (const key of [
-		"PI_CODING_AGENT_DIR",
-		"XDG_CONFIG_HOME",
-		"OPENAI_API_KEY",
-		"BRAVE_API_KEY",
-		"PARALLEL_API_KEY",
-		"TAVILY_API_KEY",
-		"EXA_API_KEY",
-		"PERPLEXITY_API_KEY",
-		"GEMINI_API_KEY",
-	]) {
-		delete childEnv[key];
-	}
-	Object.assign(childEnv, env);
-	return spawnSync(process.execPath, ["--input-type=module"], {
-		input: script,
-		encoding: "utf8",
-		env: childEnv,
-		maxBuffer: 2 * 1024 * 1024,
-	});
+  const childEnv = { ...process.env };
+  for (const key of [
+    "PI_CODING_AGENT_DIR",
+    "XDG_CONFIG_HOME",
+    "OPENAI_API_KEY",
+    "BRAVE_API_KEY",
+    "PARALLEL_API_KEY",
+    "TAVILY_API_KEY",
+    "EXA_API_KEY",
+    "PERPLEXITY_API_KEY",
+    "GEMINI_API_KEY",
+  ]) {
+    delete childEnv[key];
+  }
+  Object.assign(childEnv, env);
+  return spawnSync(process.execPath, ["--input-type=module"], {
+    input: script,
+    encoding: "utf8",
+    env: childEnv,
+    maxBuffer: 2 * 1024 * 1024,
+  });
 }
 
 test("Brave search applies domain filters in the query and returned results", async () => {
-	const home = await mkdtemp(join(tmpdir(), "pi-web-access-brave-"));
-	const child = runChild(`
+  const home = await mkdtemp(join(tmpdir(), "pi-web-access-brave-"));
+  const child = runChild(
+    `
 		let capturedUrl = "";
 		let capturedHeaders = null;
 		globalThis.fetch = async (url, init) => {
@@ -64,24 +65,30 @@ test("Brave search applies domain filters in the query and returned results", as
 			token: capturedHeaders["X-Subscription-Token"],
 			results: result.results,
 		}));
-	`, {
-		HOME: home,
-		USERPROFILE: home,
-		BRAVE_API_KEY: "brave-test-key",
-	});
+	`,
+    {
+      HOME: home,
+      USERPROFILE: home,
+      BRAVE_API_KEY: "brave-test-key",
+    },
+  );
 
-	assert.equal(child.status, 0, child.stderr);
-	const output = JSON.parse(child.stdout.trim());
-	assert.match(output.q, /site:github\.com/);
-	assert.match(output.q, /NOT site:gist\.github\.com/);
-	assert.equal(output.count, "20");
-	assert.equal(output.token, "brave-test-key");
-	assert.deepEqual(output.results.map((result) => result.url), ["https://github.com/nicobailon/pi-web-access"]);
+  assert.equal(child.status, 0, child.stderr);
+  const output = JSON.parse(child.stdout.trim());
+  assert.match(output.q, /site:github\.com/);
+  assert.match(output.q, /NOT site:gist\.github\.com/);
+  assert.equal(output.count, "20");
+  assert.equal(output.token, "brave-test-key");
+  assert.deepEqual(
+    output.results.map((result) => result.url),
+    ["https://github.com/nicobailon/pi-web-access"],
+  );
 });
 
 test("Tavily search uses bearer auth and maps filters/content", async () => {
-	const home = await mkdtemp(join(tmpdir(), "pi-web-access-tavily-"));
-	const child = runChild(`
+  const home = await mkdtemp(join(tmpdir(), "pi-web-access-tavily-"));
+  const child = runChild(
+    `
 		let capturedUrl = "";
 		let capturedHeaders = null;
 		let capturedBody = null;
@@ -108,34 +115,46 @@ test("Tavily search uses bearer auth and maps filters/content", async () => {
 			includeContent: true,
 		});
 		console.log(JSON.stringify({ capturedUrl, capturedHeaders, capturedBody, result }));
-	`, {
-		HOME: home,
-		USERPROFILE: home,
-		TAVILY_API_KEY: "tvly-test-key",
-	});
+	`,
+    {
+      HOME: home,
+      USERPROFILE: home,
+      TAVILY_API_KEY: "tvly-test-key",
+    },
+  );
 
-	assert.equal(child.status, 0, child.stderr);
-	const output = JSON.parse(child.stdout.trim());
-	assert.equal(output.capturedUrl, "https://api.tavily.com/search");
-	assert.equal(output.capturedHeaders.Authorization, "Bearer tvly-test-key");
-	assert.deepEqual(output.capturedBody, {
-		query: "tavily search docs",
-		search_depth: "basic",
-		max_results: 4,
-		include_answer: "basic",
-		include_raw_content: "markdown",
-		time_range: "week",
-		include_domains: ["docs.tavily.com"],
-		exclude_domains: ["reddit.com"],
-	});
-	assert.equal(output.result.answer, "Tavily answer");
-	assert.deepEqual(output.result.results, [{ title: "Tavily Docs", url: "https://docs.tavily.com/search", snippet: "Search docs snippet" }]);
-	assert.deepEqual(output.result.inlineContent, [{ url: "https://docs.tavily.com/search", title: "Tavily Docs", content: "# Tavily Docs\nFull content", error: null }]);
+  assert.equal(child.status, 0, child.stderr);
+  const output = JSON.parse(child.stdout.trim());
+  assert.equal(output.capturedUrl, "https://api.tavily.com/search");
+  assert.equal(output.capturedHeaders.Authorization, "Bearer tvly-test-key");
+  assert.deepEqual(output.capturedBody, {
+    query: "tavily search docs",
+    search_depth: "basic",
+    max_results: 4,
+    include_answer: "basic",
+    include_raw_content: "markdown",
+    time_range: "week",
+    include_domains: ["docs.tavily.com"],
+    exclude_domains: ["reddit.com"],
+  });
+  assert.equal(output.result.answer, "Tavily answer");
+  assert.deepEqual(output.result.results, [
+    { title: "Tavily Docs", url: "https://docs.tavily.com/search", snippet: "Search docs snippet" },
+  ]);
+  assert.deepEqual(output.result.inlineContent, [
+    {
+      url: "https://docs.tavily.com/search",
+      title: "Tavily Docs",
+      content: "# Tavily Docs\nFull content",
+      error: null,
+    },
+  ]);
 });
 
 test("auto provider falls through to Tavily after unavailable earlier providers", async () => {
-	const home = await mkdtemp(join(tmpdir(), "pi-web-access-tavily-auto-"));
-	const child = runChild(`
+  const home = await mkdtemp(join(tmpdir(), "pi-web-access-tavily-auto-"));
+  const child = runChild(
+    `
 		const calls = [];
 		globalThis.fetch = async (url, init = {}) => {
 			const urlText = String(url);
@@ -155,23 +174,26 @@ test("auto provider falls through to Tavily after unavailable earlier providers"
 		const { search } = await import(${JSON.stringify(searchModuleUrl)});
 		const result = await search("auto tavily docs", { provider: "auto" });
 		console.log(JSON.stringify({ calls, result }));
-	`, {
-		HOME: home,
-		USERPROFILE: home,
-		TAVILY_API_KEY: "tvly-test-key",
-	});
+	`,
+    {
+      HOME: home,
+      USERPROFILE: home,
+      TAVILY_API_KEY: "tvly-test-key",
+    },
+  );
 
-	assert.equal(child.status, 0, child.stderr);
-	const output = JSON.parse(child.stdout.trim());
-	assert.ok(output.calls.includes("https://mcp.exa.ai/mcp"));
-	assert.ok(output.calls.includes("https://api.tavily.com/search"));
-	assert.equal(output.result.provider, "tavily");
-	assert.equal(output.result.answer, "Auto Tavily answer");
+  assert.equal(child.status, 0, child.stderr);
+  const output = JSON.parse(child.stdout.trim());
+  assert.ok(output.calls.includes("https://mcp.exa.ai/mcp"));
+  assert.ok(output.calls.includes("https://api.tavily.com/search"));
+  assert.equal(output.result.provider, "tavily");
+  assert.equal(output.result.answer, "Auto Tavily answer");
 });
 
 test("Exa direct API key ignores full legacy usage counter", async () => {
-	const home = await mkdtemp(join(tmpdir(), "pi-web-access-exa-paid-"));
-	const child = runChild(`
+  const home = await mkdtemp(join(tmpdir(), "pi-web-access-exa-paid-"));
+  const child = runChild(
+    `
 		const dir = ${JSON.stringify(home)};
 		const { readFileSync, writeFileSync } = await import("node:fs");
 		writeFileSync(dir + "/web-search.json", JSON.stringify({ exaApiKey: "exa-paid-key" }));
@@ -199,25 +221,28 @@ test("Exa direct API key ignores full legacy usage counter", async () => {
 			result,
 			usage,
 		}));
-	`, {
-		HOME: home,
-		USERPROFILE: home,
-		PI_CODING_AGENT_DIR: home,
-	});
+	`,
+    {
+      HOME: home,
+      USERPROFILE: home,
+      PI_CODING_AGENT_DIR: home,
+    },
+  );
 
-	assert.equal(child.status, 0, child.stderr);
-	const output = JSON.parse(child.stdout.trim());
-	assert.equal(output.available, true);
-	assert.equal(output.capturedUrl, "https://api.exa.ai/answer");
-	assert.equal(output.apiKey, "exa-paid-key");
-	assert.equal(output.result.answer, "Paid Exa answer");
-	assert.deepEqual(output.result.results, [{ title: "Exa Docs", url: "https://exa.ai/docs", snippet: "" }]);
-	assert.equal(output.usage.count, 1000);
+  assert.equal(child.status, 0, child.stderr);
+  const output = JSON.parse(child.stdout.trim());
+  assert.equal(output.available, true);
+  assert.equal(output.capturedUrl, "https://api.exa.ai/answer");
+  assert.equal(output.apiKey, "exa-paid-key");
+  assert.equal(output.result.answer, "Paid Exa answer");
+  assert.deepEqual(output.result.results, [{ title: "Exa Docs", url: "https://exa.ai/docs", snippet: "" }]);
+  assert.equal(output.usage.count, 1000);
 });
 
 test("OpenAI search requires web_search and maps domain filters", async () => {
-	const home = await mkdtemp(join(tmpdir(), "pi-web-access-openai-"));
-	const child = runChild(`
+  const home = await mkdtemp(join(tmpdir(), "pi-web-access-openai-"));
+  const child = runChild(
+    `
 		let capturedUrl = "";
 		let capturedHeaders = null;
 		let capturedBody = null;
@@ -261,25 +286,27 @@ test("OpenAI search requires web_search and maps domain filters", async () => {
 			results: result.results,
 			answer: result.answer,
 		}));
-	`, {
-		HOME: home,
-		USERPROFILE: home,
-		OPENAI_API_KEY: "sk-test-key",
-	});
+	`,
+    {
+      HOME: home,
+      USERPROFILE: home,
+      OPENAI_API_KEY: "sk-test-key",
+    },
+  );
 
-	assert.equal(child.status, 0, child.stderr);
-	const output = JSON.parse(child.stdout.trim());
-	assert.equal(output.url, "https://api.openai.com/v1/responses");
-	assert.equal(output.authorization, "Bearer sk-test-key");
-	assert.equal(output.body.tool_choice, "required");
-	assert.deepEqual(output.body.include, ["web_search_call.action.sources"]);
-	assert.deepEqual(output.body.tools[0].filters, {
-		allowed_domains: ["openai.com"],
-		blocked_domains: ["reddit.com"],
-	});
-	assert.equal(output.answer, "Answer from the web");
-	assert.deepEqual(output.results.map((result) => result.url), [
-		"https://openai.com/docs",
-		"https://openai.com/blog",
-	]);
+  assert.equal(child.status, 0, child.stderr);
+  const output = JSON.parse(child.stdout.trim());
+  assert.equal(output.url, "https://api.openai.com/v1/responses");
+  assert.equal(output.authorization, "Bearer sk-test-key");
+  assert.equal(output.body.tool_choice, "required");
+  assert.deepEqual(output.body.include, ["web_search_call.action.sources"]);
+  assert.deepEqual(output.body.tools[0].filters, {
+    allowed_domains: ["openai.com"],
+    blocked_domains: ["reddit.com"],
+  });
+  assert.equal(output.answer, "Answer from the web");
+  assert.deepEqual(
+    output.results.map((result) => result.url),
+    ["https://openai.com/docs", "https://openai.com/blog"],
+  );
 });

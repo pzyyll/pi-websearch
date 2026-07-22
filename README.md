@@ -8,7 +8,7 @@
 
 [![npm version](https://img.shields.io/npm/v/pi-web-access?style=for-the-badge)](https://www.npmjs.com/package/pi-web-access)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows*-blue?style=for-the-badge)]()
+[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows*-blue?style=for-the-badge)](<>)
 
 https://github.com/user-attachments/assets/cac6a17a-1eeb-4dde-9818-cdf85d8ea98f
 
@@ -57,19 +57,19 @@ Requires Pi v0.37.3+.
 
 ```typescript
 // Search the web
-web_search({ query: "TypeScript best practices 2025" })
+web_search({ query: "TypeScript best practices 2025" });
 
 // Fetch a page
-fetch_content({ url: "https://docs.example.com/guide" })
+fetch_content({ url: "https://docs.example.com/guide" });
 
 // Clone a GitHub repo
-fetch_content({ url: "https://github.com/owner/repo" })
+fetch_content({ url: "https://github.com/owner/repo" });
 
 // Understand a YouTube video
-fetch_content({ url: "https://youtube.com/watch?v=abc", prompt: "What libraries are shown?" })
+fetch_content({ url: "https://youtube.com/watch?v=abc", prompt: "What libraries are shown?" });
 
 // Analyze a screen recording
-fetch_content({ url: "/path/to/recording.mp4", prompt: "What error appears on screen?" })
+fetch_content({ url: "/path/to/recording.mp4", prompt: "What error appears on screen?" });
 ```
 
 ## Tools
@@ -79,56 +79,56 @@ fetch_content({ url: "/path/to/recording.mp4", prompt: "What error appears on sc
 Search the web via OpenAI, Brave, Parallel, Tavily, Exa, Perplexity AI, or Gemini. Returns a synthesized answer with source citations.
 
 ```typescript
-web_search({ query: "rust async programming" })
-web_search({ queries: ["query 1", "query 2"] })
-web_search({ query: "latest news", numResults: 10, recencyFilter: "week" })
-web_search({ query: "...", domainFilter: ["github.com"] })
-web_search({ query: "...", provider: "openai" })
-web_search({ query: "...", includeContent: true })
-web_search({ queries: ["query 1", "query 2"], workflow: "none" })
-web_search({ queries: ["query 1", "query 2"], workflow: "summary-review" })
-web_search({ queries: ["query 1", "query 2"], workflow: "auto-summary" })
+web_search({ query: "rust async programming" });
+web_search({ queries: ["query 1", "query 2"] });
+web_search({ query: "latest news", numResults: 10, recencyFilter: "week" });
+web_search({ query: "...", domainFilter: ["github.com"] });
+web_search({ query: "...", provider: "openai" });
+web_search({ query: "...", includeContent: true });
+web_search({ queries: ["query 1", "query 2"], workflow: "none" });
+web_search({ queries: ["query 1", "query 2"], workflow: "summary-review" });
+web_search({ queries: ["query 1", "query 2"], workflow: "auto-summary" });
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| `query` / `queries` | Single query or batch of queries |
-| `numResults` | Results per query (default: 5, max: 20) |
-| `recencyFilter` | `day`, `week`, `month`, or `year` |
-| `domainFilter` | Limit to domains (prefix with `-` to exclude) |
-| `provider` | `auto` (default), `openai`, `brave`, `parallel`, `tavily`, `exa`, `perplexity`, or `gemini` |
-| `includeContent` | Fetch full page content from sources in background |
-| `workflow` | `none` (skip curator), `summary-review` (open curator and auto-generate a summary draft, default), or `auto-summary` (generate a summary without opening the curator) |
+| Parameter           | Description                                                                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `query` / `queries` | Single query or batch of queries                                                                                                                                      |
+| `numResults`        | Results per query (default: 5, max: 20)                                                                                                                               |
+| `recencyFilter`     | `day`, `week`, `month`, or `year`                                                                                                                                     |
+| `domainFilter`      | Limit to domains (prefix with `-` to exclude)                                                                                                                         |
+| `provider`          | `auto` (default), `openai`, `brave`, `parallel`, `tavily`, `exa`, `perplexity`, or `gemini`                                                                           |
+| `includeContent`    | Fetch full page content from sources in background                                                                                                                    |
+| `workflow`          | `none` (skip curator), `summary-review` (open curator and auto-generate a summary draft, default), or `auto-summary` (generate a summary without opening the curator) |
 
 ### fetch_content
 
 Fetch URL(s) and extract readable content as markdown. Automatically detects and handles GitHub repos, YouTube videos, PDFs, local video files, and regular web pages.
 
 ```typescript
-fetch_content({ url: "https://example.com/article" })
-fetch_content({ urls: ["url1", "url2", "url3"] })
-fetch_content({ url: "https://github.com/owner/repo" })
-fetch_content({ url: "https://youtube.com/watch?v=abc", prompt: "What libraries are shown?" })
-fetch_content({ url: "/path/to/recording.mp4", prompt: "What error appears on screen?" })
-fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00", frames: 4 })
+fetch_content({ url: "https://example.com/article" });
+fetch_content({ urls: ["url1", "url2", "url3"] });
+fetch_content({ url: "https://github.com/owner/repo" });
+fetch_content({ url: "https://youtube.com/watch?v=abc", prompt: "What libraries are shown?" });
+fetch_content({ url: "/path/to/recording.mp4", prompt: "What error appears on screen?" });
+fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00", frames: 4 });
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| `url` / `urls` | Single URL/path or multiple URLs |
-| `prompt` | Question to ask about a YouTube video or local video file |
-| `timestamp` | Extract frame(s) — single (`"23:41"`), range (`"23:41-25:00"`), or seconds (`"85"`) |
-| `frames` | Number of frames to extract (max 12) |
-| `forceClone` | Clone GitHub repos that exceed the 350MB size threshold |
+| Parameter      | Description                                                                         |
+| -------------- | ----------------------------------------------------------------------------------- |
+| `url` / `urls` | Single URL/path or multiple URLs                                                    |
+| `prompt`       | Question to ask about a YouTube video or local video file                           |
+| `timestamp`    | Extract frame(s) — single (`"23:41"`), range (`"23:41-25:00"`), or seconds (`"85"`) |
+| `frames`       | Number of frames to extract (max 12)                                                |
+| `forceClone`   | Clone GitHub repos that exceed the 350MB size threshold                             |
 
 ### get_search_content
 
 Retrieve stored content from previous searches or fetches. Content over 30,000 chars is truncated in tool responses but stored in full for retrieval here.
 
 ```typescript
-get_search_content({ responseId: "abc123", urlIndex: 0 })
-get_search_content({ responseId: "abc123", url: "https://..." })
-get_search_content({ responseId: "abc123", query: "original query" })
+get_search_content({ responseId: "abc123", urlIndex: 0 });
+get_search_content({ responseId: "abc123", url: "https://..." });
+get_search_content({ responseId: "abc123", query: "original query" });
 ```
 
 ## Capabilities
@@ -156,11 +156,11 @@ Fallback: Gemini API (Files API upload) → Gemini Web when browser cookies are 
 Use `timestamp` and/or `frames` on any YouTube URL or local video file to extract visual frames as images.
 
 ```typescript
-fetch_content({ url: "...", timestamp: "23:41" })                       // single frame
-fetch_content({ url: "...", timestamp: "23:41-25:00" })                 // range, 6 frames
-fetch_content({ url: "...", timestamp: "23:41-25:00", frames: 3 })      // range, custom count
-fetch_content({ url: "...", timestamp: "23:41", frames: 5 })            // 5 frames at 5s intervals
-fetch_content({ url: "...", frames: 6 })                                // sample whole video
+fetch_content({ url: "...", timestamp: "23:41" }); // single frame
+fetch_content({ url: "...", timestamp: "23:41-25:00" }); // range, 6 frames
+fetch_content({ url: "...", timestamp: "23:41-25:00", frames: 3 }); // range, custom count
+fetch_content({ url: "...", timestamp: "23:41", frames: 5 }); // 5 frames at 5s intervals
+fetch_content({ url: "...", frames: 6 }); // sample whole video
 ```
 
 Requires `ffmpeg` (and `yt-dlp` for YouTube). Timestamps accept `H:MM:SS`, `MM:SS`, or bare seconds.
@@ -324,34 +324,34 @@ Rate limits: Perplexity is capped at 10 requests/minute (client-side). Content f
 <details>
 <summary>Files</summary>
 
-| File | Purpose |
-|------|---------|
-| `src/index.ts` | Extension source entry (tool definitions, commands, widget); built to `dist/index.mjs` via `npm run build` |
-| `src/curator-page.ts` | HTML/CSS/JS generation for the curator UI with markdown rendering |
-| `src/curator-server.ts` | Ephemeral HTTP server with SSE streaming and state machine |
-| `src/summary-review.ts` | Summary prompt construction, model-based draft generation, and deterministic fallback summary |
-| `src/openai-search.ts` | OpenAI Responses API web search provider with Codex/API-key auth |
-| `src/brave.ts` | Brave Search API provider |
-| `src/parallel.ts` | Parallel search provider and extraction fallback |
-| `src/tavily.ts` | Tavily Search API provider |
-| `src/exa.ts` | Exa.ai search provider — direct API and MCP proxy |
-| `src/extract.ts` | URL/file path routing, HTTP extraction, fallback orchestration |
-| `src/gemini-search.ts` | Search routing across OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, Gemini API, Gemini Web |
-| `src/gemini-url-context.ts` | Gemini URL Context + Web extraction fallbacks |
-| `src/gemini-web.ts` | Gemini Web client (cookie auth, StreamGenerate) |
-| `src/gemini-web-config.ts` | Gemini Web profile and browser-cookie opt-in config |
-| `src/gemini-api.ts` | Gemini REST API client (generateContent) |
-| `src/chrome-cookies.ts` | macOS/Linux Chromium-based cookie extraction (Keychain/secret-tool + SQLite) |
-| `src/youtube-extract.ts` | YouTube detection, three-tier extraction, frame extraction |
-| `src/video-extract.ts` | Local video detection, Files API upload, Gemini analysis |
-| `src/github-extract.ts` | GitHub URL parsing, clone cache, content generation |
-| `src/github-api.ts` | GitHub API fallback for large repos and commit SHAs |
-| `src/perplexity.ts` | Perplexity API client with rate limiting |
-| `src/pdf-extract.ts` | PDF text extraction, saves to markdown |
-| `src/rsc-extract.ts` | RSC flight data parser for Next.js pages |
-| `src/utils.ts` | Shared formatting and error helpers |
-| `src/storage.ts` | Session-aware result storage |
-| `src/activity.ts` | Activity tracking for the observability widget |
-| `skills/librarian/` | Bundled skill for library research |
+| File                        | Purpose                                                                                                    |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `src/index.ts`              | Extension source entry (tool definitions, commands, widget); built to `dist/index.mjs` via `npm run build` |
+| `src/curator-page.ts`       | HTML/CSS/JS generation for the curator UI with markdown rendering                                          |
+| `src/curator-server.ts`     | Ephemeral HTTP server with SSE streaming and state machine                                                 |
+| `src/summary-review.ts`     | Summary prompt construction, model-based draft generation, and deterministic fallback summary              |
+| `src/openai-search.ts`      | OpenAI Responses API web search provider with Codex/API-key auth                                           |
+| `src/brave.ts`              | Brave Search API provider                                                                                  |
+| `src/parallel.ts`           | Parallel search provider and extraction fallback                                                           |
+| `src/tavily.ts`             | Tavily Search API provider                                                                                 |
+| `src/exa.ts`                | Exa.ai search provider — direct API and MCP proxy                                                          |
+| `src/extract.ts`            | URL/file path routing, HTTP extraction, fallback orchestration                                             |
+| `src/gemini-search.ts`      | Search routing across OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, Gemini API, Gemini Web             |
+| `src/gemini-url-context.ts` | Gemini URL Context + Web extraction fallbacks                                                              |
+| `src/gemini-web.ts`         | Gemini Web client (cookie auth, StreamGenerate)                                                            |
+| `src/gemini-web-config.ts`  | Gemini Web profile and browser-cookie opt-in config                                                        |
+| `src/gemini-api.ts`         | Gemini REST API client (generateContent)                                                                   |
+| `src/chrome-cookies.ts`     | macOS/Linux Chromium-based cookie extraction (Keychain/secret-tool + SQLite)                               |
+| `src/youtube-extract.ts`    | YouTube detection, three-tier extraction, frame extraction                                                 |
+| `src/video-extract.ts`      | Local video detection, Files API upload, Gemini analysis                                                   |
+| `src/github-extract.ts`     | GitHub URL parsing, clone cache, content generation                                                        |
+| `src/github-api.ts`         | GitHub API fallback for large repos and commit SHAs                                                        |
+| `src/perplexity.ts`         | Perplexity API client with rate limiting                                                                   |
+| `src/pdf-extract.ts`        | PDF text extraction, saves to markdown                                                                     |
+| `src/rsc-extract.ts`        | RSC flight data parser for Next.js pages                                                                   |
+| `src/utils.ts`              | Shared formatting and error helpers                                                                        |
+| `src/storage.ts`            | Session-aware result storage                                                                               |
+| `src/activity.ts`           | Activity tracking for the observability widget                                                             |
+| `skills/librarian/`         | Bundled skill for library research                                                                         |
 
 </details>

@@ -1,6 +1,6 @@
 /**
  * PDF Content Extractor
- * 
+ *
  * Extracts text from PDF files and saves to markdown.
  * Uses unpdf (pdfjs-dist wrapper) for text extraction.
  */
@@ -32,23 +32,16 @@ const DEFAULT_OUTPUT_DIR = join(homedir(), "Downloads");
 export async function extractPDFToMarkdown(
   buffer: ArrayBuffer,
   url: string,
-  options: PDFExtractOptions = {}
+  options: PDFExtractOptions = {},
 ): Promise<PDFExtractResult> {
-  const {
-    maxPages = DEFAULT_MAX_PAGES,
-    outputDir = DEFAULT_OUTPUT_DIR,
-    filename,
-  } = options;
+  const { maxPages = DEFAULT_MAX_PAGES, outputDir = DEFAULT_OUTPUT_DIR, filename } = options;
 
-  const safeMaxPages = Number.isFinite(maxPages)
-    ? Math.max(1, Math.floor(maxPages))
-    : DEFAULT_MAX_PAGES;
+  const safeMaxPages = Number.isFinite(maxPages) ? Math.max(1, Math.floor(maxPages)) : DEFAULT_MAX_PAGES;
 
   const pdf = await getDocumentProxy(new Uint8Array(buffer));
   const metadata = await pdf.getMetadata();
-  const metadataInfo = metadata.info && typeof metadata.info === "object"
-    ? metadata.info as Record<string, unknown>
-    : null;
+  const metadataInfo =
+    metadata.info && typeof metadata.info === "object" ? (metadata.info as Record<string, unknown>) : null;
 
   // Extract title from metadata or URL
   const metaTitle = typeof metadataInfo?.Title === "string" ? metadataInfo.Title : undefined;
@@ -73,7 +66,7 @@ export async function extractPDFToMarkdown(
       .join(" ")
       .replace(/\s+/g, " ")
       .trim();
-    
+
     if (pageText) {
       pages.push({ pageNum: i, text: pageText });
     }
@@ -81,7 +74,7 @@ export async function extractPDFToMarkdown(
 
   // Build markdown content
   const lines: string[] = [];
-  
+
   // Header with metadata
   lines.push(`# ${title}`);
   lines.push("");
@@ -138,10 +131,10 @@ function extractTitleFromURL(url: string): string {
   try {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
-    
+
     // Get filename without extension
     let filename = basename(pathname, ".pdf");
-    
+
     // Handle arxiv URLs: /pdf/1706.03762 → "arxiv-1706.03762"
     if (urlObj.hostname.includes("arxiv.org")) {
       const match = pathname.match(/\/(?:pdf|abs)\/(\d+\.\d+)/);
@@ -149,13 +142,10 @@ function extractTitleFromURL(url: string): string {
         filename = `arxiv-${match[1]}`;
       }
     }
-    
+
     // Clean up filename
-    filename = filename
-      .replace(/[_-]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    
+    filename = filename.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
     return filename || "document";
   } catch {
     return "document";
@@ -166,14 +156,15 @@ function extractTitleFromURL(url: string): string {
  * Sanitize string for use as filename
  */
 function sanitizeFilename(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 100)
-    .replace(/^-|-$/g, "")
-    || "document";
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .slice(0, 100)
+      .replace(/^-|-$/g, "") || "document"
+  );
 }
 
 /**

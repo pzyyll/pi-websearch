@@ -11,22 +11,22 @@ Answer questions about open-source libraries by finding evidence with GitHub per
 
 Pi executes tool calls sequentially, even when you emit multiple calls in one turn. But batching independent calls in a single turn still saves LLM round-trips (~5-10s each). Use these patterns:
 
-| Pattern | When | Actually parallel? |
-|---------|------|-------------------|
-| Batch tool calls in one turn | Independent ops (web_search + fetch_content + read) | No, but saves round-trips |
-| `fetch_content({ urls: [...] })` | Multiple URLs to fetch | Yes (3 concurrent) |
-| Bash with `&` + `wait` | Multiple git/gh commands | Yes (OS-level) |
+| Pattern                          | When                                                | Actually parallel?        |
+| -------------------------------- | --------------------------------------------------- | ------------------------- |
+| Batch tool calls in one turn     | Independent ops (web_search + fetch_content + read) | No, but saves round-trips |
+| `fetch_content({ urls: [...] })` | Multiple URLs to fetch                              | Yes (3 concurrent)        |
+| Bash with `&` + `wait`           | Multiple git/gh commands                            | Yes (OS-level)            |
 
 ## Step 1: Classify the Request
 
 Before doing anything, classify the request to pick the right research strategy.
 
-| Type | Trigger | Primary Approach |
-|------|---------|-----------------|
-| **Conceptual** | "How do I use X?", "Best practice for Y?" | web_search + fetch_content (README/docs) |
-| **Implementation** | "How does X implement Y?", "Show me the source" | fetch_content (clone) + code search |
-| **Context/History** | "Why was this changed?", "History of X?" | git log + git blame + issue/PR search |
-| **Comprehensive** | Complex or ambiguous requests, "deep dive" | All of the above |
+| Type                | Trigger                                         | Primary Approach                         |
+| ------------------- | ----------------------------------------------- | ---------------------------------------- |
+| **Conceptual**      | "How do I use X?", "Best practice for Y?"       | web_search + fetch_content (README/docs) |
+| **Implementation**  | "How does X implement Y?", "Show me the source" | fetch_content (clone) + code search      |
+| **Context/History** | "Why was this changed?", "History of X?"        | git log + git blame + issue/PR search    |
+| **Comprehensive**   | Complex or ambiguous requests, "deep dive"      | All of the above                         |
 
 ## Step 2: Research by Type
 
@@ -129,7 +129,7 @@ The stale time check happens in [`notifyManager.ts`](https://github.com/TanStack
 
 \`\`\`typescript
 function isStale(query: Query, staleTime: number): boolean {
-  return query.state.dataUpdatedAt + staleTime < Date.now()
+return query.state.dataUpdatedAt + staleTime < Date.now()
 }
 \`\`\`
 ```
@@ -142,31 +142,31 @@ For questions about video tutorials, conference talks, or screen recordings:
 
 ```typescript
 // Full extraction (transcript + visual descriptions)
-fetch_content({ url: "https://youtube.com/watch?v=abc" })
+fetch_content({ url: "https://youtube.com/watch?v=abc" });
 
 // Ask a specific question about a video
-fetch_content({ url: "https://youtube.com/watch?v=abc", prompt: "What libraries are imported in this tutorial?" })
+fetch_content({ url: "https://youtube.com/watch?v=abc", prompt: "What libraries are imported in this tutorial?" });
 
 // Single frame at a known moment
-fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41" })
+fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41" });
 
 // Range scan for visual discovery
-fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00" })
+fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00" });
 
 // Custom density across a range
-fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00", frames: 3 })
+fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00", frames: 3 });
 
 // Whole-video sampling
-fetch_content({ url: "https://youtube.com/watch?v=abc", frames: 6 })
+fetch_content({ url: "https://youtube.com/watch?v=abc", frames: 6 });
 
 // Analyze a local recording
-fetch_content({ url: "/path/to/demo.mp4", prompt: "What error message appears on screen?" })
+fetch_content({ url: "/path/to/demo.mp4", prompt: "What error message appears on screen?" });
 
 // Batch multiple videos with the same question
 fetch_content({
   urls: ["https://youtube.com/watch?v=abc", "https://youtube.com/watch?v=def"],
-  prompt: "What packages are installed?"
-})
+  prompt: "What packages are installed?",
+});
 ```
 
 Use single timestamps for known moments, ranges for visual scanning, and frames-alone for a quick overview of the whole video.
@@ -175,16 +175,16 @@ The `prompt` parameter only applies to video content (YouTube URLs and local vid
 
 ## Failure Recovery
 
-| Failure | Recovery |
-|---------|----------|
-| grep finds nothing | Broaden the query, try concept names instead of exact function names |
-| gh CLI rate limited | Use the already-cloned repo in /tmp/pi-github-repos/ for git operations |
-| Repo too large to clone | fetch_content returns an API-only view automatically; use that or add `forceClone: true` |
-| File not found in clone | Branch name with slashes may have misresolved; list the repo tree and navigate manually |
+| Failure                        | Recovery                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| grep finds nothing             | Broaden the query, try concept names instead of exact function names                     |
+| gh CLI rate limited            | Use the already-cloned repo in /tmp/pi-github-repos/ for git operations                  |
+| Repo too large to clone        | fetch_content returns an API-only view automatically; use that or add `forceClone: true` |
+| File not found in clone        | Branch name with slashes may have misresolved; list the repo tree and navigate manually  |
 | Uncertain about implementation | State your uncertainty explicitly, propose a hypothesis, show what evidence you did find |
-| Video extraction fails | Ensure Chrome is signed into gemini.google.com (free) or set GEMINI_API_KEY |
-| Page returns 403/bot block | Gemini fallback triggers automatically; no action needed if Gemini is configured |
-| web_search fails | Check provider config; try explicit `provider: "gemini"` if Perplexity key is missing |
+| Video extraction fails         | Ensure Chrome is signed into gemini.google.com (free) or set GEMINI_API_KEY              |
+| Page returns 403/bot block     | Gemini fallback triggers automatically; no action needed if Gemini is configured         |
+| web_search fails               | Check provider config; try explicit `provider: "gemini"` if Perplexity key is missing    |
 
 ## Guidelines
 

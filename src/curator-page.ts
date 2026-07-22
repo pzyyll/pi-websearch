@@ -1,53 +1,78 @@
 function safeInlineJSON(data: unknown): string {
-	return JSON.stringify(data)
-		.replace(/</g, "\\u003c")
-		.replace(/>/g, "\\u003e")
-		.replace(/&/g, "\\u0026")
-		.replace(/\u2028/g, "\\u2028")
-		.replace(/\u2029/g, "\\u2029");
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function buildProviderButtons(
-	available: { openai: boolean; brave: boolean; parallel: boolean; tavily: boolean; perplexity: boolean; exa: boolean; gemini: boolean },
-	selected: string,
-	hasInitialQueries: boolean,
+  available: {
+    openai: boolean;
+    brave: boolean;
+    parallel: boolean;
+    tavily: boolean;
+    perplexity: boolean;
+    exa: boolean;
+    gemini: boolean;
+  },
+  selected: string,
+  hasInitialQueries: boolean,
 ): string {
-	const providers = [
-		{ value: "openai", label: "OpenAI", available: available.openai },
-		{ value: "exa", label: "Exa", available: available.exa },
-		{ value: "brave", label: "Brave", available: available.brave },
-		{ value: "parallel", label: "Parallel", available: available.parallel },
-		{ value: "tavily", label: "Tavily", available: available.tavily },
-		{ value: "perplexity", label: "Perplexity", available: available.perplexity },
-		{ value: "gemini", label: "Gemini", available: available.gemini },
-	];
+  const providers = [
+    { value: "openai", label: "OpenAI", available: available.openai },
+    { value: "exa", label: "Exa", available: available.exa },
+    { value: "brave", label: "Brave", available: available.brave },
+    { value: "parallel", label: "Parallel", available: available.parallel },
+    { value: "tavily", label: "Tavily", available: available.tavily },
+    { value: "perplexity", label: "Perplexity", available: available.perplexity },
+    { value: "gemini", label: "Gemini", available: available.gemini },
+  ];
 
-	return providers
-		.filter(p => p.available)
-		.map((p) => {
-			const isDefault = p.value === selected;
-			const state = isDefault && hasInitialQueries ? "loading" : "idle";
-			const classes = ["provider-btn", state, isDefault ? "is-default" : ""].filter(Boolean).join(" ");
-			const disabled = state === "loading" ? " disabled" : "";
-			return `<button type="button" class="${classes}" data-provider="${p.value}" data-state="${state}"${disabled}>${p.label}</button>`;
-		})
-		.join("");
+  return providers
+    .filter((p) => p.available)
+    .map((p) => {
+      const isDefault = p.value === selected;
+      const state = isDefault && hasInitialQueries ? "loading" : "idle";
+      const classes = ["provider-btn", state, isDefault ? "is-default" : ""].filter(Boolean).join(" ");
+      const disabled = state === "loading" ? " disabled" : "";
+      return `<button type="button" class="${classes}" data-provider="${p.value}" data-state="${state}"${disabled}>${p.label}</button>`;
+    })
+    .join("");
 }
 
 export function generateCuratorPage(
-	queries: string[],
-	sessionToken: string,
-	timeout: number,
-	availableProviders: { openai: boolean; brave: boolean; parallel: boolean; tavily: boolean; perplexity: boolean; exa: boolean; gemini: boolean },
-	defaultProvider: string,
-	searchProvider: string,
-	summaryModels: Array<{ value: string; label: string }>,
-	defaultSummaryModel: string | null,
+  queries: string[],
+  sessionToken: string,
+  timeout: number,
+  availableProviders: {
+    openai: boolean;
+    brave: boolean;
+    parallel: boolean;
+    tavily: boolean;
+    perplexity: boolean;
+    exa: boolean;
+    gemini: boolean;
+  },
+  defaultProvider: string,
+  searchProvider: string,
+  summaryModels: Array<{ value: string; label: string }>,
+  defaultSummaryModel: string | null,
 ): string {
-	const providerButtonsHtml = buildProviderButtons(availableProviders, defaultProvider, queries.length > 0);
-	const inlineData = safeInlineJSON({ queries, sessionToken, timeout, defaultProvider, searchProvider, summaryModels, defaultSummaryModel, availableProviders });
+  const providerButtonsHtml = buildProviderButtons(availableProviders, defaultProvider, queries.length > 0);
+  const inlineData = safeInlineJSON({
+    queries,
+    sessionToken,
+    timeout,
+    defaultProvider,
+    searchProvider,
+    summaryModels,
+    defaultSummaryModel,
+    availableProviders,
+  });
 
-	return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">

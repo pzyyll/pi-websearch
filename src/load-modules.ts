@@ -10,29 +10,29 @@ let geminiWebMod: Promise<typeof import("./gemini-web.ts")> | undefined;
 let providerAvailabilityMod: Promise<typeof import("./provider-availability.ts")> | undefined;
 
 export function loadExtract() {
-	return (extractMod ??= import("./extract.ts"));
+  return (extractMod ??= import("./extract.ts"));
 }
 
 export function loadGithubExtract() {
-	return (githubExtractMod ??= import("./github-extract.ts"));
+  return (githubExtractMod ??= import("./github-extract.ts"));
 }
 
 export function loadCuratorServer() {
-	return (curatorServerMod ??= import("./curator-server.ts"));
+  return (curatorServerMod ??= import("./curator-server.ts"));
 }
 
 export function loadSummaryReview() {
-	return (summaryReviewMod ??= import("./summary-review.ts"));
+  return (summaryReviewMod ??= import("./summary-review.ts"));
 }
 
 export function loadGeminiSearch() {
-	return (geminiSearchMod ??= import("./gemini-search.ts"));
+  return (geminiSearchMod ??= import("./gemini-search.ts"));
 }
 
 export function loadGeminiWeb() {
-	return (geminiWebMod ??= import("./gemini-web.ts"));
+  return (geminiWebMod ??= import("./gemini-web.ts"));
 }
 
 export function loadProviderAvailability() {
-	return (providerAvailabilityMod ??= import("./provider-availability.ts"));
+  return (providerAvailabilityMod ??= import("./provider-availability.ts"));
 }

@@ -3,10 +3,5 @@
   "printWidth": 120,
   "tabWidth": 2,
   "useTabs": false,
-  "ignorePatterns": [
-    "dist/**",
-    ".worktrees/**",
-    "banner.png",
-    "*.mp4"
-  ]
+  "ignorePatterns": ["dist/**", ".worktrees/**", "banner.png", "*.mp4"]
 }

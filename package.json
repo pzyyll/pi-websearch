@@ -2,10 +2,35 @@
   "name": "pi-web-access",
   "version": "0.13.0",
   "description": "Web search, URL fetching, GitHub repo cloning, PDF extraction, YouTube video understanding, and local video analysis for Pi coding agent. Supports OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, and Gemini.",
-  "type": "module",
-  "engines": {
-    "node": ">=22"
+  "keywords": [
+    "extension",
+    "fetch",
+    "perplexity",
+    "pi",
+    "pi-coding-agent",
+    "pi-package",
+    "scraping",
+    "web-search"
+  ],
+  "homepage": "https://github.com/pzyyll/pi-websearch#readme",
+  "bugs": {
+    "url": "https://github.com/pzyyll/pi-websearch/issues"
   },
+  "license": "MIT",
+  "author": "pzyyll",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pzyyll/pi-websearch.git"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "banner.png"
+  ],
+  "type": "module",
   "scripts": {
     "build": "tsdown",
     "prepublishOnly": "npm run build",
@@ -16,34 +41,6 @@
     "format:check": "oxfmt --check",
     "measure:import": "node scripts/measure-import-graph.mjs"
   },
-  "keywords": [
-    "pi-package",
-    "pi",
-    "pi-coding-agent",
-    "extension",
-    "web-search",
-    "perplexity",
-    "fetch",
-    "scraping"
-  ],
-  "author": "pzyyll",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pzyyll/pi-websearch.git"
-  },
-  "bugs": {
-    "url": "https://github.com/pzyyll/pi-websearch/issues"
-  },
-  "homepage": "https://github.com/pzyyll/pi-websearch#readme",
-  "files": [
-    "dist",
-    "skills",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md",
-    "banner.png"
-  ],
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "linkedom": "^0.16.0",
@@ -51,11 +48,19 @@
     "turndown": "^7.2.0",
     "unpdf": "^1.6.2"
   },
+  "devDependencies": {
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
+    "tsdown": "^0.22.13"
+  },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*",
     "typebox": "*"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "pi": {
     "extensions": [
@@ -65,10 +70,5 @@
       "./skills"
     ],
     "video": "https://github.com/nicobailon/pi-web-access/raw/refs/heads/main/pi-web-fetch-demo.mp4"
-  },
-  "devDependencies": {
-    "oxfmt": "^0.60.0",
-    "oxlint": "^1.75.0",
-    "tsdown": "^0.22.13"
   }
 }

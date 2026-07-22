@@ -8,31 +8,31 @@ import { test } from "node:test";
 const extractorUrl = new URL("../src/extract.ts", import.meta.url).href;
 
 test("YouTube extraction surfaces Gemini API errors", async () => {
-	const home = await mkdtemp(join(tmpdir(), "pi-web-access-youtube-errors-"));
-	const env = {
-		...process.env,
-		HOME: home,
-		USERPROFILE: home,
-		GEMINI_API_KEY: "test-gemini-key",
-		PERPLEXITY_API_KEY: "",
-	};
-	delete env.PI_ALLOW_BROWSER_COOKIES;
-	delete env.FEYNMAN_ALLOW_BROWSER_COOKIES;
+  const home = await mkdtemp(join(tmpdir(), "pi-web-access-youtube-errors-"));
+  const env = {
+    ...process.env,
+    HOME: home,
+    USERPROFILE: home,
+    GEMINI_API_KEY: "test-gemini-key",
+    PERPLEXITY_API_KEY: "",
+  };
+  delete env.PI_ALLOW_BROWSER_COOKIES;
+  delete env.FEYNMAN_ALLOW_BROWSER_COOKIES;
 
-	const child = spawnSync(process.execPath, ["--input-type=module"], {
-		input: buildChildScript(extractorUrl),
-		encoding: "utf8",
-		env,
-	});
+  const child = spawnSync(process.execPath, ["--input-type=module"], {
+    input: buildChildScript(extractorUrl),
+    encoding: "utf8",
+    env,
+  });
 
-	assert.equal(child.status, 0, child.stderr || child.stdout);
-	const result = JSON.parse(child.stdout);
-	assert.match(result.error, /Gemini API error 503/);
-	assert.doesNotMatch(result.error, /Sign into Google in Chrome/);
+  assert.equal(child.status, 0, child.stderr || child.stdout);
+  const result = JSON.parse(child.stdout);
+  assert.match(result.error, /Gemini API error 503/);
+  assert.doesNotMatch(result.error, /Sign into Google in Chrome/);
 });
 
 function buildChildScript(moduleUrl) {
-	return `
+  return `
 		process.on("uncaughtException", (error) => {
 			console.error(error?.stack || error);
 			process.exit(1);

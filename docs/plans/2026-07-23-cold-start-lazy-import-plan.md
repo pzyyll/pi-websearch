@@ -19,13 +19,13 @@
 
 ## Success Metrics
 
-| Metric | Baseline (from cold analysis / remeasure) | Target after this plan |
-|--------|---------------------------------------------|------------------------|
-| Eager local TS files pulled by entry | 30 files / ~460KB | ≤ 12 light modules (utils, storage, activity, fetch-params, render-search-error, summary-model-scope, search-types, provider-availability, thin facades) |
-| Eager npm feature deps from entry graph | `linkedom`, `@mozilla/readability`, `turndown`, `unpdf` | None at entry; loaded only on first `fetch_content` / extract path |
-| `curator-page.ts` at entry | Yes (via `curator-server`) | No; load on first curator open |
-| Extension module-import time (isolated jiti, warm OS cache) | ~0.6–4.6s depending on cache/AV | ≥ 50% reduction vs same-machine baseline script |
-| Behavior | tools/commands/workflows unchanged | Existing `node --test` green; manual smoke of search + fetch + curator |
+| Metric                                                      | Baseline (from cold analysis / remeasure)               | Target after this plan                                                                                                                                   |
+| ----------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eager local TS files pulled by entry                        | 30 files / ~460KB                                       | ≤ 12 light modules (utils, storage, activity, fetch-params, render-search-error, summary-model-scope, search-types, provider-availability, thin facades) |
+| Eager npm feature deps from entry graph                     | `linkedom`, `@mozilla/readability`, `turndown`, `unpdf` | None at entry; loaded only on first `fetch_content` / extract path                                                                                       |
+| `curator-page.ts` at entry                                  | Yes (via `curator-server`)                              | No; load on first curator open                                                                                                                           |
+| Extension module-import time (isolated jiti, warm OS cache) | ~0.6–4.6s depending on cache/AV                         | ≥ 50% reduction vs same-machine baseline script                                                                                                          |
+| Behavior                                                    | tools/commands/workflows unchanged                      | Existing `node --test` green; manual smoke of search + fetch + curator                                                                                   |
 
 Out of scope for this plan:
 
@@ -142,13 +142,13 @@ Every new/edited `.ts` file must keep the repo rule: start with a 2-line `ABOUTM
 
 - [ ] Replace call sites:
 
-  | Call site | Loader usage |
-  |-----------|--------------|
-  | `startBackgroundFetch` / `fetch_content` execute | `const { fetchAllContent } = await loadExtract()` |
+  | Call site                                                    | Loader usage                                                                                                                                                       |
+  | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `startBackgroundFetch` / `fetch_content` execute             | `const { fetchAllContent } = await loadExtract()`                                                                                                                  |
   | `handleSessionChange` / `session_shutdown` `clearCloneCache` | `const { clearCloneCache } = await loadGithubExtract(); clearCloneCache()` — or fire-and-forget void loader then clear; must not block session events unreasonably |
-  | curator start paths | `const { startCuratorServer } = await loadCuratorServer()` |
-  | summary draft / deterministic summary | `const mod = await loadSummaryReview()` |
-  | `search(...)` in tools/commands | `const { search } = await loadGeminiSearch()` |
+  | curator start paths                                          | `const { startCuratorServer } = await loadCuratorServer()`                                                                                                         |
+  | summary draft / deterministic summary                        | `const mod = await loadSummaryReview()`                                                                                                                            |
+  | `search(...)` in tools/commands                              | `const { search } = await loadGeminiSearch()`                                                                                                                      |
 
 - [ ] For `ExtractedContent` / `CuratorServerHandle` / `SummaryMeta` types: use `import type` from their modules (type-only, erased) **or** duplicate minimal structural types in `search-types.ts` / local interfaces if jiti/type stripping is unreliable in tests. Prefer `import type`.
 
@@ -219,7 +219,7 @@ Every new/edited `.ts` file must keep the repo rule: start with a 2-line `ABOUTM
          import("./gemini-web.ts"),
        ]);
        const geminiWebAvail = await geminiWeb.isGeminiWebAvailable();
-       return { openai: await isOpenAISearchAvailable(ctx), brave: isBraveAvailable(), /* ... */ };
+       return { openai: await isOpenAISearchAvailable(ctx), brave: isBraveAvailable() /* ... */ };
      }
      ```
 
@@ -285,15 +285,15 @@ Every new/edited `.ts` file must keep the repo rule: start with a 2-line `ABOUTM
 
 - [ ] Dynamic-import feature modules at branch points:
 
-  | Branch | Dynamic module |
-  |--------|----------------|
-  | PDF | `./pdf-extract.ts` |
-  | GitHub | `./github-extract.ts` |
-  | YouTube | `./youtube-extract.ts` |
-  | local video | `./video-extract.ts` |
-  | Gemini URL context / Gemini Web extract | `./gemini-url-context.ts` |
-  | Parallel extract | `./parallel.ts` |
-  | RSC | `./rsc-extract.ts` (optional; smaller) |
+  | Branch                                  | Dynamic module                         |
+  | --------------------------------------- | -------------------------------------- |
+  | PDF                                     | `./pdf-extract.ts`                     |
+  | GitHub                                  | `./github-extract.ts`                  |
+  | YouTube                                 | `./youtube-extract.ts`                 |
+  | local video                             | `./video-extract.ts`                   |
+  | Gemini URL context / Gemini Web extract | `./gemini-url-context.ts`              |
+  | Parallel extract                        | `./parallel.ts`                        |
+  | RSC                                     | `./rsc-extract.ts` (optional; smaller) |
 
 - [ ] Keep `ssrf-protection.ts`, `activity.ts`, `utils.ts`, `p-limit` static if used on every fetch (small). If `p-limit` is only for concurrency in `fetchAllContent`, static is fine.
 - [ ] Cache dynamic module promises at module scope to avoid re-import per URL in a multi-URL fetch.
@@ -381,14 +381,14 @@ Every new/edited `.ts` file must keep the repo rule: start with a 2-line `ABOUTM
 
 ## Risks and Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| First search/fetch slower | Cache module promises; only first call pays; boot is the product metric |
-| `import type` still pulls modules under jiti | Boundary tests + prefer types in `search-types.ts`; verify measure script ignores type-only edges |
-| Circular import via loaders | Keep `load-modules.ts` free of imports from `index.ts`; only import leaf feature modules |
-| Tests that `readFileSync` index source for patterns break | Update string-based tests carefully; keep registration gate tests intact |
-| Auto provider path loads many modules on first search | Accept for v1; optional later: config-driven single-provider short-circuit |
-| Windows AV still slow on first dynamic import | Deferred to first use; boot path no longer touches those files |
+| Risk                                                      | Mitigation                                                                                        |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| First search/fetch slower                                 | Cache module promises; only first call pays; boot is the product metric                           |
+| `import type` still pulls modules under jiti              | Boundary tests + prefer types in `search-types.ts`; verify measure script ignores type-only edges |
+| Circular import via loaders                               | Keep `load-modules.ts` free of imports from `index.ts`; only import leaf feature modules          |
+| Tests that `readFileSync` index source for patterns break | Update string-based tests carefully; keep registration gate tests intact                          |
+| Auto provider path loads many modules on first search     | Accept for v1; optional later: config-driven single-provider short-circuit                        |
+| Windows AV still slow on first dynamic import             | Deferred to first use; boot path no longer touches those files                                    |
 
 ---
 
