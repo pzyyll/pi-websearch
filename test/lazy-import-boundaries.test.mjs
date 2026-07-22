@@ -6,10 +6,10 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const root = new URL("..", import.meta.url);
-const indexSrc = readFileSync(new URL("../index.ts", import.meta.url), "utf8");
-const geminiSearchSrc = readFileSync(new URL("../gemini-search.ts", import.meta.url), "utf8");
-const curatorServerSrc = readFileSync(new URL("../curator-server.ts", import.meta.url), "utf8");
-const extractSrc = readFileSync(new URL("../extract.ts", import.meta.url), "utf8");
+const indexSrc = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+const geminiSearchSrc = readFileSync(new URL("../src/gemini-search.ts", import.meta.url), "utf8");
+const curatorServerSrc = readFileSync(new URL("../src/curator-server.ts", import.meta.url), "utf8");
+const extractSrc = readFileSync(new URL("../src/extract.ts", import.meta.url), "utf8");
 
 /**
  * True when a source line is a static value import of the given module path.

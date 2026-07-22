@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
-import { buildSearchErrorPlan } from "../render-search-error.ts";
+import { buildSearchErrorPlan } from "../src/render-search-error.ts";
 
 // --- fixture: a stale cancel with partial results, mirroring the user's report
 // ("Search curation cancelled (stale)" with 2/3 queries done, one errored,
@@ -132,7 +132,7 @@ test("non-error result yields null so the caller falls through to the success re
 // --- source-contract guard: index.ts web_search renderResult must DELEGATE to
 // buildSearchErrorPlan on the error path (mutation-proof against reverting the
 // integration back to the dead-end single-line return). ---
-const indexPath = fileURLToPath(new URL("../index.ts", import.meta.url));
+const indexPath = fileURLToPath(new URL("../src/index.ts", import.meta.url));
 const indexSrc = readFileSync(indexPath, "utf8");
 
 test("index.ts imports buildSearchErrorPlan and wires it into the web_search error path", () => {

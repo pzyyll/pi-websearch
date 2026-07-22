@@ -5,10 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { loadEnabledModelPatterns, modelMatchesEnabledPatterns } from "../summary-model-scope.ts";
+import { loadEnabledModelPatterns, modelMatchesEnabledPatterns } from "../src/summary-model-scope.ts";
 
-const indexSrc = readFileSync(new URL("../index.ts", import.meta.url), "utf8");
-const summarySrc = readFileSync(new URL("../summary-review.ts", import.meta.url), "utf8");
+const indexSrc = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
+const summarySrc = readFileSync(new URL("../src/summary-review.ts", import.meta.url), "utf8");
 
 test("summary model scope matches nested provider model ids and thinking suffixes", () => {
 	assert.equal(

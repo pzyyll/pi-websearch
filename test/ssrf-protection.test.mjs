@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fetchRemoteUrl, validateRemoteUrl } from "../ssrf-protection.ts";
+import { fetchRemoteUrl, validateRemoteUrl } from "../src/ssrf-protection.ts";
 
 const publicLookup = async () => [{ address: "93.184.216.34", family: 4 }];
 

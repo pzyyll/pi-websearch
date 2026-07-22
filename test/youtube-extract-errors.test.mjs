@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-const extractorUrl = new URL("../extract.ts", import.meta.url).href;
+const extractorUrl = new URL("../src/extract.ts", import.meta.url).href;
 
 test("YouTube extraction surfaces Gemini API errors", async () => {
 	const home = await mkdtemp(join(tmpdir(), "pi-web-access-youtube-errors-"));
