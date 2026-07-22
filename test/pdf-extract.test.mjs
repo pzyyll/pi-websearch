@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
-const extractorUrl = new URL("../pdf-extract.ts", import.meta.url).href;
+const extractorUrl = new URL("../src/pdf-extract.ts", import.meta.url).href;
 
 test("extractPDFToMarkdown works on Node 22 without native Promise.try", () => {
   const child = spawnSync(process.execPath, ["--input-type=module"], {

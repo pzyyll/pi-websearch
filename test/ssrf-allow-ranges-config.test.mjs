@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-const extractUrl = new URL("../extract.ts", import.meta.url).href;
+const extractUrl = new URL("../src/extract.ts", import.meta.url).href;
 
 // `loadSsrfAllowRanges` reads the config path captured at module load, so each
 // case runs in a child process with PI_CODING_AGENT_DIR pointed at a temp dir.

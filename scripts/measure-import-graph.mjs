@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import { performance } from "node:perf_hooks";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const ENTRY = join(ROOT, "index.ts");
+const ENTRY = join(ROOT, "src", "index.ts");
 
 const HEAVY_NPM = ["linkedom", "@mozilla/readability", "turndown", "unpdf"];
 const HEAVY_LOCAL = ["curator-page", "extract", "gemini-web", "chrome-cookies"];

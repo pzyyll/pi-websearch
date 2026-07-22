@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-const utilsUrl = new URL("../utils.ts", import.meta.url).href;
-const perplexityUrl = new URL("../perplexity.ts", import.meta.url).href;
-const geminiApiUrl = new URL("../gemini-api.ts", import.meta.url).href;
+const utilsUrl = new URL("../src/utils.ts", import.meta.url).href;
+const perplexityUrl = new URL("../src/perplexity.ts", import.meta.url).href;
+const geminiApiUrl = new URL("../src/gemini-api.ts", import.meta.url).href;
 
 function runChild(script, env) {
 	const childEnv = { ...process.env };

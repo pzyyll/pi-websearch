@@ -19,7 +19,7 @@ async function loadServer() {
 		wroteCuratorPageShim = true;
 	}
 
-	return import(`../curator-server.ts?test=${Date.now()}`);
+	return import(`../src/curator-server.ts?test=${Date.now()}`);
 }
 
 after(async () => {

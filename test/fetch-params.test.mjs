@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { normalizeFetchContentParams } from "../fetch-params.ts";
+import { normalizeFetchContentParams } from "../src/fetch-params.ts";
 
 test("fetch_content params fall back to url when urls is an empty array", () => {
 	const normalized = normalizeFetchContentParams({

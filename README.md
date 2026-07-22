@@ -326,32 +326,32 @@ Rate limits: Perplexity is capped at 10 requests/minute (client-side). Content f
 
 | File | Purpose |
 |------|---------|
-| `index.ts` | Extension source entry (tool definitions, commands, widget); built to `dist/index.mjs` via `npm run build` |
-| `curator-page.ts` | HTML/CSS/JS generation for the curator UI with markdown rendering |
-| `curator-server.ts` | Ephemeral HTTP server with SSE streaming and state machine |
-| `summary-review.ts` | Summary prompt construction, model-based draft generation, and deterministic fallback summary |
-| `openai-search.ts` | OpenAI Responses API web search provider with Codex/API-key auth |
-| `brave.ts` | Brave Search API provider |
-| `parallel.ts` | Parallel search provider and extraction fallback |
-| `tavily.ts` | Tavily Search API provider |
-| `exa.ts` | Exa.ai search provider — direct API and MCP proxy |
-| `extract.ts` | URL/file path routing, HTTP extraction, fallback orchestration |
-| `gemini-search.ts` | Search routing across OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, Gemini API, Gemini Web |
-| `gemini-url-context.ts` | Gemini URL Context + Web extraction fallbacks |
-| `gemini-web.ts` | Gemini Web client (cookie auth, StreamGenerate) |
-| `gemini-web-config.ts` | Gemini Web profile and browser-cookie opt-in config |
-| `gemini-api.ts` | Gemini REST API client (generateContent) |
-| `chrome-cookies.ts` | macOS/Linux Chromium-based cookie extraction (Keychain/secret-tool + SQLite) |
-| `youtube-extract.ts` | YouTube detection, three-tier extraction, frame extraction |
-| `video-extract.ts` | Local video detection, Files API upload, Gemini analysis |
-| `github-extract.ts` | GitHub URL parsing, clone cache, content generation |
-| `github-api.ts` | GitHub API fallback for large repos and commit SHAs |
-| `perplexity.ts` | Perplexity API client with rate limiting |
-| `pdf-extract.ts` | PDF text extraction, saves to markdown |
-| `rsc-extract.ts` | RSC flight data parser for Next.js pages |
-| `utils.ts` | Shared formatting and error helpers |
-| `storage.ts` | Session-aware result storage |
-| `activity.ts` | Activity tracking for the observability widget |
+| `src/index.ts` | Extension source entry (tool definitions, commands, widget); built to `dist/index.mjs` via `npm run build` |
+| `src/curator-page.ts` | HTML/CSS/JS generation for the curator UI with markdown rendering |
+| `src/curator-server.ts` | Ephemeral HTTP server with SSE streaming and state machine |
+| `src/summary-review.ts` | Summary prompt construction, model-based draft generation, and deterministic fallback summary |
+| `src/openai-search.ts` | OpenAI Responses API web search provider with Codex/API-key auth |
+| `src/brave.ts` | Brave Search API provider |
+| `src/parallel.ts` | Parallel search provider and extraction fallback |
+| `src/tavily.ts` | Tavily Search API provider |
+| `src/exa.ts` | Exa.ai search provider — direct API and MCP proxy |
+| `src/extract.ts` | URL/file path routing, HTTP extraction, fallback orchestration |
+| `src/gemini-search.ts` | Search routing across OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, Gemini API, Gemini Web |
+| `src/gemini-url-context.ts` | Gemini URL Context + Web extraction fallbacks |
+| `src/gemini-web.ts` | Gemini Web client (cookie auth, StreamGenerate) |
+| `src/gemini-web-config.ts` | Gemini Web profile and browser-cookie opt-in config |
+| `src/gemini-api.ts` | Gemini REST API client (generateContent) |
+| `src/chrome-cookies.ts` | macOS/Linux Chromium-based cookie extraction (Keychain/secret-tool + SQLite) |
+| `src/youtube-extract.ts` | YouTube detection, three-tier extraction, frame extraction |
+| `src/video-extract.ts` | Local video detection, Files API upload, Gemini analysis |
+| `src/github-extract.ts` | GitHub URL parsing, clone cache, content generation |
+| `src/github-api.ts` | GitHub API fallback for large repos and commit SHAs |
+| `src/perplexity.ts` | Perplexity API client with rate limiting |
+| `src/pdf-extract.ts` | PDF text extraction, saves to markdown |
+| `src/rsc-extract.ts` | RSC flight data parser for Next.js pages |
+| `src/utils.ts` | Shared formatting and error helpers |
+| `src/storage.ts` | Session-aware result storage |
+| `src/activity.ts` | Activity tracking for the observability widget |
 | `skills/librarian/` | Bundled skill for library research |
 
 </details>
