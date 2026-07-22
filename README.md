@@ -326,7 +326,7 @@ Rate limits: Perplexity is capped at 10 requests/minute (client-side). Content f
 
 | File | Purpose |
 |------|---------|
-| `index.ts` | Extension entry, tool definitions, commands, widget |
+| `index.ts` | Extension source entry (tool definitions, commands, widget); built to `dist/index.mjs` via `npm run build` |
 | `curator-page.ts` | HTML/CSS/JS generation for the curator UI with markdown rendering |
 | `curator-server.ts` | Ephemeral HTTP server with SSE streaming and state machine |
 | `summary-review.ts` | Summary prompt construction, model-based draft generation, and deterministic fallback summary |

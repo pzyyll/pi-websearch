@@ -1001,7 +1001,7 @@ export default function (pi: ExtensionAPI) {
 						});
 						return draft;
 					},
-					onSubmit(payload) {
+					async onSubmit(payload) {
 						if (pendingCurates.get(callId) !== pc) return;
 						searchAbort.abort();
 						const filtered = payload.selectedQueryIndices.length > 0
@@ -1026,7 +1026,7 @@ export default function (pi: ExtensionAPI) {
 						pc.finish(buildSearchReturn(base));
 						closeCurator(callId);
 					},
-					onCancel(reason) {
+					async onCancel(reason) {
 						if (pendingCurates.get(callId) !== pc) return;
 						searchAbort.abort();
 						if (reason === "timeout") {
@@ -2275,7 +2275,7 @@ export default function (pi: ExtensionAPI) {
 								feedback,
 							);
 						},
-						onSubmit(payload) {
+						async onSubmit(payload) {
 							if (commandHandle && !isCommandActive()) return;
 							aborted = true;
 							searchAbort.abort();
@@ -2299,7 +2299,7 @@ export default function (pi: ExtensionAPI) {
 							sendFollowUpFromReturn(buildSearchReturn(base));
 							closeCurator(commandCallId);
 						},
-						onCancel(reason) {
+						async onCancel(reason) {
 							if (commandHandle && !isCommandActive()) return;
 							aborted = true;
 							searchAbort.abort();

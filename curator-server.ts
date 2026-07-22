@@ -29,8 +29,8 @@ export interface CuratorServerOptions {
 }
 
 export interface CuratorServerCallbacks {
-	onSubmit: (payload: { selectedQueryIndices: number[]; summary?: string; summaryMeta?: SummaryMeta; rawResults?: boolean }) => void;
-	onCancel: (reason: "user" | "timeout" | "stale") => void;
+	onSubmit: (payload: { selectedQueryIndices: number[]; summary?: string; summaryMeta?: SummaryMeta; rawResults?: boolean }) => void | Promise<void>;
+	onCancel: (reason: "user" | "timeout" | "stale") => void | Promise<void>;
 	onProviderChange: (provider: string) => void;
 	onAddSearch: (query: string, queryIndex: number, provider?: string) => Promise<{
 		answer: string;

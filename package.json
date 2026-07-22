@@ -4,6 +4,8 @@
   "description": "Web search, URL fetching, GitHub repo cloning, PDF extraction, YouTube video understanding, and local video analysis for Pi coding agent. Supports OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, and Gemini.",
   "type": "module",
   "scripts": {
+    "build": "tsdown",
+    "prepublishOnly": "npm run build",
     "test": "node --test",
     "measure:import": "node scripts/measure-import-graph.mjs"
   },
@@ -27,6 +29,14 @@
     "url": "https://github.com/nicobailon/pi-web-access/issues"
   },
   "homepage": "https://github.com/nicobailon/pi-web-access#readme",
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "banner.png"
+  ],
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "linkedom": "^0.16.0",
@@ -42,11 +52,14 @@
   },
   "pi": {
     "extensions": [
-      "./index.ts"
+      "./dist/index.mjs"
     ],
     "skills": [
       "./skills"
     ],
     "video": "https://github.com/nicobailon/pi-web-access/raw/refs/heads/main/pi-web-fetch-demo.mp4"
+  },
+  "devDependencies": {
+    "tsdown": "^0.22.13"
   }
 }
