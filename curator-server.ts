@@ -1,6 +1,15 @@
+// ABOUTME: Local HTTP server for the interactive browser search curator UI.
+// ABOUTME: Dynamically loads curator-page HTML only when serving curator responses.
+
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
-import { generateCuratorPage } from "./curator-page.ts";
 import type { SummaryMeta } from "./summary-review.ts";
+
+let generateCuratorPageMod: Promise<typeof import("./curator-page.ts")> | undefined;
+
+async function loadGenerateCuratorPage() {
+	const mod = await (generateCuratorPageMod ??= import("./curator-page.ts"));
+	return mod.generateCuratorPage;
+}
 
 const STALE_THRESHOLD_MS = 30000;
 const WATCHDOG_INTERVAL_MS = 1000;
@@ -262,16 +271,21 @@ export function startCuratorServer(
 		sseBuffer.push(payload);
 	}
 
-	const pageHtml = generateCuratorPage(
-		queries,
-		sessionToken,
-		timeout,
-		availableProviders,
-		defaultProvider,
-		searchProvider,
-		summaryModels,
-		defaultSummaryModel,
-	);
+	let pageHtmlPromise: Promise<string> | undefined;
+	function getPageHtml(): Promise<string> {
+		return (pageHtmlPromise ??= loadGenerateCuratorPage().then((generateCuratorPage) =>
+			generateCuratorPage(
+				queries,
+				sessionToken,
+				timeout,
+				availableProviders,
+				defaultProvider,
+				searchProvider,
+				summaryModels,
+				defaultSummaryModel,
+			),
+		));
+	}
 
 	const server = http.createServer(async (req, res) => {
 		try {
@@ -286,6 +300,7 @@ export function startCuratorServer(
 					return;
 				}
 				touchHeartbeat();
+				const pageHtml = await getPageHtml();
 				res.writeHead(200, {
 					"Content-Type": "text/html; charset=utf-8",
 					"Cache-Control": "no-store",
@@ -466,7 +481,8 @@ export function startCuratorServer(
 
 				try {
 					const result = await callbacks.onSummarize(parsed.indices, controller.signal, model, feedback);
-					if (requestId !== summarizeRequestSeq || state === "COMPLETED") {
+					// Use `completed` (not narrowed `state`) so concurrent close after await is visible to both runtime and types.
+					if (requestId !== summarizeRequestSeq || completed) {
 						sendJson(res, 409, { ok: false, error: "Summarize request superseded" });
 						return;
 					}

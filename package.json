@@ -4,7 +4,8 @@
   "description": "Web search, URL fetching, GitHub repo cloning, PDF extraction, YouTube video understanding, and local video analysis for Pi coding agent. Supports OpenAI, Brave, Parallel, Tavily, Exa, Perplexity, and Gemini.",
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "measure:import": "node scripts/measure-import-graph.mjs"
   },
   "keywords": [
     "pi-package",

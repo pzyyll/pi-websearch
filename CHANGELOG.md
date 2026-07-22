@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Deferred heavy search/extract/curator modules and npm deps (`linkedom`, Readability, Turndown, provider clients, `curator-page`) behind cached dynamic imports so extension cold-start no longer evaluates the full feature graph at module load.
+
 ## [0.13.0] - 2026-06-25
 
 ### Added

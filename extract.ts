@@ -1,15 +1,10 @@
-import { Readability } from "@mozilla/readability";
-import { parseHTML } from "linkedom";
-import TurndownService from "turndown";
+// ABOUTME: URL content extraction pipeline for fetch_content and inline search enrichment.
+// ABOUTME: Defers heavy npm deps and feature modules until the matching URL branch runs.
+
+/// <reference path="./turndown.d.ts" />
+
 import pLimit from "p-limit";
 import { activityMonitor } from "./activity.ts";
-import { extractRSCContent } from "./rsc-extract.ts";
-import { extractPDFToMarkdown, isPDF } from "./pdf-extract.ts";
-import { extractGitHub } from "./github-extract.ts";
-import { isYouTubeURL, isYouTubeEnabled, extractYouTube, extractYouTubeFrame, extractYouTubeFrames, getYouTubeStreamInfo } from "./youtube-extract.ts";
-import { extractWithUrlContext, extractWithGeminiWeb } from "./gemini-url-context.ts";
-import { extractWithParallel, isParallelAvailable } from "./parallel.ts";
-import { isVideoFile, extractVideo, extractVideoFrame, getLocalVideoDuration } from "./video-extract.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { fetchRemoteUrl, validateRemoteUrl, type Lookup } from "./ssrf-protection.ts";
 import { formatSeconds, getWebSearchConfigPath } from "./utils.ts";
@@ -20,6 +15,76 @@ const CONCURRENT_LIMIT = 3;
 const NON_RECOVERABLE_ERRORS = ["Unsupported content type", "Response too large"];
 const MIN_USEFUL_CONTENT = 500;
 const WEB_SEARCH_CONFIG_PATH = getWebSearchConfigPath();
+
+let htmlExtractMods: Promise<{
+	Readability: typeof import("@mozilla/readability").Readability;
+	parseHTML: typeof import("linkedom").parseHTML;
+	turndown: { turndown: (html: string) => string };
+}> | undefined;
+let rscExtractMod: Promise<typeof import("./rsc-extract.ts")> | undefined;
+let pdfExtractMod: Promise<typeof import("./pdf-extract.ts")> | undefined;
+let githubExtractMod: Promise<typeof import("./github-extract.ts")> | undefined;
+let youtubeExtractMod: Promise<typeof import("./youtube-extract.ts")> | undefined;
+let geminiUrlContextMod: Promise<typeof import("./gemini-url-context.ts")> | undefined;
+let parallelMod: Promise<typeof import("./parallel.ts")> | undefined;
+let videoExtractMod: Promise<typeof import("./video-extract.ts")> | undefined;
+
+function loadHtmlExtractMods() {
+	return (htmlExtractMods ??= (async () => {
+		const [readabilityMod, linkedomMod, turndownMod] = await Promise.all([
+			import("@mozilla/readability"),
+			import("linkedom"),
+			import("turndown"),
+		]);
+		const TurndownService = turndownMod.default;
+		return {
+			Readability: readabilityMod.Readability,
+			parseHTML: linkedomMod.parseHTML,
+			turndown: new TurndownService({
+				headingStyle: "atx",
+				codeBlockStyle: "fenced",
+			}),
+		};
+	})());
+}
+
+function loadRscExtract() {
+	return (rscExtractMod ??= import("./rsc-extract.ts"));
+}
+
+function loadPdfExtract() {
+	return (pdfExtractMod ??= import("./pdf-extract.ts"));
+}
+
+function loadGithubExtract() {
+	return (githubExtractMod ??= import("./github-extract.ts"));
+}
+
+function loadYoutubeExtract() {
+	return (youtubeExtractMod ??= import("./youtube-extract.ts"));
+}
+
+function loadGeminiUrlContext() {
+	return (geminiUrlContextMod ??= import("./gemini-url-context.ts"));
+}
+
+function loadParallel() {
+	return (parallelMod ??= import("./parallel.ts"));
+}
+
+function loadVideoExtract() {
+	return (videoExtractMod ??= import("./video-extract.ts"));
+}
+
+/** Pure PDF sniff — kept local so isPDF does not pull unpdf via pdf-extract. */
+function isPdfUrlOrContentType(url: string, contentType?: string): boolean {
+	if (contentType?.includes("application/pdf")) return true;
+	try {
+		return new URL(url).pathname.toLowerCase().endsWith(".pdf");
+	} catch {
+		return false;
+	}
+}
 
 /**
  * Read `ssrf.allowRanges` (CIDR strings) from web-search.json. Returns [] when
@@ -69,11 +134,6 @@ function isAbortError(err: unknown): boolean {
 function abortedResult(url: string): ExtractedContent {
 	return { url, title: "", content: "", error: "Aborted" };
 }
-
-const turndown = new TurndownService({
-	headingStyle: "atx",
-	codeBlockStyle: "fenced",
-});
 
 const fetchLimit = pLimit(CONCURRENT_LIMIT);
 
@@ -228,6 +288,7 @@ function buildFrameResult(
 async function extractLocalFrames(
 	filePath: string, timestamps: number[],
 ): Promise<{ frames: VideoFrame[]; error: string | null }> {
+	const { extractVideoFrame } = await loadVideoExtract();
 	const results = await Promise.all(timestamps.map(async (t) => {
 		const frame = await extractVideoFrame(filePath, t);
 		if ("error" in frame) return { error: frame.error };
@@ -238,9 +299,10 @@ async function extractLocalFrames(
 	return { frames, error: frames.length === 0 && firstError ? firstError.error : null };
 }
 
-function safeVideoInfo(url: string): { info: ReturnType<typeof isVideoFile>; error?: string } {
+async function safeVideoInfo(url: string) {
 	try {
-		return { info: isVideoFile(url) };
+		const { isVideoFile } = await loadVideoExtract();
+		return { info: isVideoFile(url), error: undefined as string | undefined };
 	} catch (err) {
 		return { info: null, error: errorMessage(err) };
 	}
@@ -257,6 +319,11 @@ export async function extractContent(
 
 	if (options?.frames && !options.timestamp) {
 		const frameCount = options.frames;
+		const {
+			isYouTubeURL,
+			getYouTubeStreamInfo,
+			extractYouTubeFrames,
+		} = await loadYoutubeExtract();
 		const ytInfo = isYouTubeURL(url);
 		if (ytInfo.isYouTube && ytInfo.videoId) {
 			const streamInfo = await getYouTubeStreamInfo(ytInfo.videoId);
@@ -274,11 +341,12 @@ export async function extractContent(
 			return buildFrameResult(url, label, timestamps.length, result.frames, result.error, streamInfo.duration);
 		}
 
-		const localVideo = safeVideoInfo(url);
+		const localVideo = await safeVideoInfo(url);
 		if (localVideo.error) {
 			return { url, title: "", content: "", error: localVideo.error };
 		}
 		if (localVideo.info) {
+			const { getLocalVideoDuration } = await loadVideoExtract();
 			const durationResult = await getLocalVideoDuration(localVideo.info.absolutePath);
 			if (typeof durationResult !== "number") {
 				return { url, title: "Frames", content: durationResult.error, error: durationResult.error };
@@ -305,6 +373,12 @@ export async function extractContent(
 		}
 
 		const frameCount = options.frames;
+		const {
+			isYouTubeURL,
+			getYouTubeStreamInfo,
+			extractYouTubeFrames,
+			extractYouTubeFrame,
+		} = await loadYoutubeExtract();
 		const ytInfo = isYouTubeURL(url);
 		if (ytInfo.isYouTube && ytInfo.videoId) {
 			const streamInfo = await getYouTubeStreamInfo(ytInfo.videoId);
@@ -357,7 +431,7 @@ export async function extractContent(
 			return { url, title: `Frame at ${options.timestamp}`, content: `Video frame at ${options.timestamp}`, error: null, thumbnail: frame };
 		}
 
-		const localVideo = safeVideoInfo(url);
+		const localVideo = await safeVideoInfo(url);
 		if (localVideo.error) {
 			return { url, title: "", content: "", error: localVideo.error };
 		}
@@ -379,6 +453,7 @@ export async function extractContent(
 				return buildFrameResult(url, label, timestamps.length, result.frames, result.error);
 			}
 
+			const { extractVideoFrame } = await loadVideoExtract();
 			const frame = await extractVideoFrame(localVideo.info.absolutePath, spec.seconds);
 			if ("error" in frame) {
 				return { url, title: `Frame at ${options.timestamp}`, content: frame.error, error: frame.error };
@@ -389,12 +464,13 @@ export async function extractContent(
 		return { url, title: "", content: "", error: "Timestamp extraction only works with YouTube and local video files" };
 	}
 
-	const localVideo = safeVideoInfo(url);
+	const localVideo = await safeVideoInfo(url);
 	if (localVideo.error) {
 		return { url, title: "", content: "", error: localVideo.error };
 	}
 	if (localVideo.info) {
 		try {
+			const { extractVideo } = await loadVideoExtract();
 			const result = await extractVideo(localVideo.info, signal, options);
 			if (signal?.aborted) return abortedResult(url);
 			return result ?? { url, title: "", content: "", error: `Video analysis requires Gemini access. Either:\n  1. Sign into gemini.google.com in Chrome (free, uses cookies)\n  2. Set GEMINI_API_KEY in ${WEB_SEARCH_CONFIG_PATH}` };
@@ -414,6 +490,7 @@ export async function extractContent(
 	}
 
 	try {
+		const { extractGitHub } = await loadGithubExtract();
 		const ghResult = await extractGitHub(url, signal, options?.forceClone);
 		if (ghResult) return ghResult;
 		if (signal?.aborted) return abortedResult(url);
@@ -425,6 +502,11 @@ export async function extractContent(
 		}
 	}
 
+	const {
+		isYouTubeURL,
+		isYouTubeEnabled,
+		extractYouTube,
+	} = await loadYoutubeExtract();
 	const ytInfo = isYouTubeURL(url);
 	let youtubeEnabled = false;
 	try {
@@ -464,6 +546,7 @@ export async function extractContent(
 
 	let parallelError: string | null = null;
 	try {
+		const { isParallelAvailable, extractWithParallel } = await loadParallel();
 		if (isParallelAvailable()) {
 			const parallelResult = await extractWithParallel(url, signal, options);
 			if (parallelResult) return parallelResult;
@@ -479,6 +562,7 @@ export async function extractContent(
 
 	let geminiResult: ExtractedContent | null = null;
 	try {
+		const { extractWithUrlContext, extractWithGeminiWeb } = await loadGeminiUrlContext();
 		geminiResult = await extractWithUrlContext(url, signal)
 			?? await extractWithGeminiWeb(url, signal);
 	} catch (err) {
@@ -572,7 +656,7 @@ async function extractViaHttp(
 
 		const contentLengthHeader = response.headers.get("content-length");
 		const contentType = response.headers.get("content-type") || "";
-		const isPDFContent = isPDF(url, contentType);
+		const isPDFContent = isPdfUrlOrContentType(url, contentType);
 		const maxResponseSize = isPDFContent ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
 		if (contentLengthHeader) {
 			const contentLength = parseInt(contentLengthHeader, 10);
@@ -590,6 +674,7 @@ async function extractViaHttp(
 		if (isPDFContent) {
 			try {
 				const buffer = await response.arrayBuffer();
+				const { extractPDFToMarkdown } = await loadPdfExtract();
 				const result = await extractPDFToMarkdown(buffer, url);
 				activityMonitor.logComplete(activityId, response.status);
 				return {
@@ -628,11 +713,13 @@ async function extractViaHttp(
 			return { url, title, content: text, error: null };
 		}
 
+		const { parseHTML, Readability, turndown } = await loadHtmlExtractMods();
 		const { document } = parseHTML(text);
 		const reader = new Readability(document as unknown as Document);
 		const article = reader.parse();
 
 		if (!article) {
+			const { extractRSCContent } = await loadRscExtract();
 			const rscResult = extractRSCContent(text);
 			if (rscResult) {
 				activityMonitor.logComplete(activityId, response.status);
@@ -655,7 +742,7 @@ async function extractViaHttp(
 			};
 		}
 
-		const markdown = turndown.turndown(article.content);
+		const markdown = turndown.turndown(article.content ?? "");
 		activityMonitor.logComplete(activityId, response.status);
 
 		if (markdown.length < MIN_USEFUL_CONTENT) {

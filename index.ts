@@ -1,12 +1,13 @@
+// ABOUTME: Pi extension entry: tool/command registration and light orchestration shell.
+// ABOUTME: Heavy search/extract/curator modules load via cached dynamic importers on first use.
+
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Box, Text, truncateToWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { StringEnum, complete, type Model } from "@earendil-works/pi-ai/compat";
-import { fetchAllContent, type ExtractedContent } from "./extract.ts";
+import type { ExtractedContent } from "./extract.ts";
 import { normalizeFetchContentParams } from "./fetch-params.ts";
-import { clearCloneCache } from "./github-extract.ts";
-import { search, type SearchProvider, type ResolvedSearchProvider } from "./gemini-search.ts";
-import type { SearchResult } from "./perplexity.ts";
+import type { SearchProvider, ResolvedSearchProvider, SearchResult } from "./search-types.ts";
 import { formatSeconds, getWebSearchConfigDir, getWebSearchConfigPath } from "./utils.ts";
 import {
 	clearResults,
@@ -20,28 +21,27 @@ import {
 	type StoredSearchData,
 } from "./storage.ts";
 import { activityMonitor, type ActivityEntry } from "./activity.ts";
-import { startCuratorServer, type CuratorServerHandle } from "./curator-server.ts";
-import {
-	buildDeterministicSummary,
-	generateSummaryDraft,
-	type SummaryGenerationContext,
-	type SummaryMeta,
+import type { CuratorServerHandle } from "./curator-server.ts";
+import type {
+	SummaryGenerationContext,
+	SummaryMeta,
 } from "./summary-review.ts";
+import {
+	loadCuratorServer,
+	loadExtract,
+	loadGeminiSearch,
+	loadGeminiWeb,
+	loadGithubExtract,
+	loadProviderAvailability,
+	loadSummaryReview,
+} from "./load-modules.ts";
 import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { platform } from "node:os";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { isPerplexityAvailable } from "./perplexity.ts";
-import { isExaAvailable } from "./exa.ts";
-import { isGeminiApiAvailable } from "./gemini-api.ts";
-import { getActiveGoogleEmail, isGeminiWebAvailable } from "./gemini-web.ts";
 import { isBrowserCookieAccessAllowed } from "./gemini-web-config.ts";
-import { isBraveAvailable } from "./brave.ts";
-import { isOpenAISearchAvailable } from "./openai-search.ts";
-import { isParallelAvailable } from "./parallel.ts";
-import { isTavilyAvailable } from "./tavily.ts";
 import { buildSearchErrorPlan, type SearchErrorDetails, type SearchErrorPlan } from "./render-search-error.ts";
 import { loadEnabledModelPatterns, modelMatchesEnabledPatterns } from "./summary-model-scope.ts";
 
@@ -185,16 +185,8 @@ function getCuratorTimeoutSeconds(): number {
 }
 
 async function getProviderAvailability(ctx: ExtensionContext): Promise<ProviderAvailability> {
-	const geminiWebAvail = await isGeminiWebAvailable();
-	return {
-		openai: await isOpenAISearchAvailable(ctx),
-		brave: isBraveAvailable(),
-		parallel: isParallelAvailable(),
-		tavily: isTavilyAvailable(),
-		perplexity: isPerplexityAvailable(),
-		exa: isExaAvailable(),
-		gemini: isGeminiApiAvailable() || !!geminiWebAvail,
-	};
+	const { getProviderAvailability: probe } = await loadProviderAvailability();
+	return probe(ctx);
 }
 
 function shouldPreferOpenAI(options?: Pick<PendingCurate, "numResults" | "recencyFilter">): boolean {
@@ -538,7 +530,7 @@ function formatEntryLine(
 function handleSessionChange(ctx: ExtensionContext): void {
 	abortPendingFetches();
 	closeCurator();
-	clearCloneCache();
+	void loadGithubExtract().then((m) => m.clearCloneCache()).catch(() => {});
 	sessionActive = true;
 	restoreFromSession(ctx);
 	// Unsubscribe before clear() to avoid callback with stale ctx
@@ -562,7 +554,8 @@ export default function (pi: ExtensionAPI) {
 		const fetchId = generateId();
 		const controller = new AbortController();
 		pendingFetches.set(fetchId, controller);
-		fetchAllContent(urls, controller.signal)
+		loadExtract()
+			.then(({ fetchAllContent }) => fetchAllContent(urls, controller.signal))
 			.then((fetched) => {
 				if (!sessionActive || !pendingFetches.has(fetchId)) return;
 				const data: StoredSearchData = {
@@ -748,6 +741,7 @@ export default function (pi: ExtensionAPI) {
 		if (selectedResults.length === 0) {
 			throw new Error("No selected results available for summary generation");
 		}
+		const { generateSummaryDraft, buildDeterministicSummary } = await loadSummaryReview();
 		try {
 			return await generateSummaryDraft(selectedResults, summaryContext, signal, modelOverride, feedback);
 		} catch (err) {
@@ -824,10 +818,10 @@ export default function (pi: ExtensionAPI) {
 		return { summaryModels, defaultSummaryModel };
 	}
 
-	function resolveSummaryForSubmit(
+	async function resolveSummaryForSubmit(
 		payload: { selectedQueryIndices: number[]; summary?: string; summaryMeta?: SummaryMeta },
 		resultsByIndex: Map<number, QueryResultData>,
-	): { approvedSummary: string; summaryMeta: SummaryMeta } {
+	): Promise<{ approvedSummary: string; summaryMeta: SummaryMeta }> {
 		const submittedSummary = typeof payload.summary === "string" ? payload.summary.trim() : "";
 		if (submittedSummary.length > 0) {
 			return {
@@ -838,6 +832,7 @@ export default function (pi: ExtensionAPI) {
 
 		const selected = filterByQueryIndices(payload.selectedQueryIndices, resultsByIndex).results;
 		const fallbackResults = selected.length > 0 ? selected : [...resultsByIndex.values()];
+		const { buildDeterministicSummary } = await loadSummaryReview();
 		const deterministic = buildDeterministicSummary(fallbackResults);
 		return {
 			approvedSummary: deterministic.summary,
@@ -973,7 +968,7 @@ export default function (pi: ExtensionAPI) {
 				: searchAbort.signal;
 
 			const sessionToken = randomUUID();
-			handle = await startCuratorServer(
+			handle = await (await loadCuratorServer()).startCuratorServer(
 				{
 					queries: pc.queryList,
 					sessionToken,
@@ -1023,7 +1018,7 @@ export default function (pi: ExtensionAPI) {
 							curatedFrom: pc.searchResults.size,
 						};
 						if (!payload.rawResults) {
-							const resolvedSummary = resolveSummaryForSubmit(payload, pc.searchResults);
+							const resolvedSummary = await resolveSummaryForSubmit(payload, pc.searchResults);
 							base.workflow = pc.workflow;
 							base.approvedSummary = resolvedSummary.approvedSummary;
 							base.summaryMeta = resolvedSummary.summaryMeta;
@@ -1035,7 +1030,7 @@ export default function (pi: ExtensionAPI) {
 						if (pendingCurates.get(callId) !== pc) return;
 						searchAbort.abort();
 						if (reason === "timeout") {
-							const resolvedSummary = resolveSummaryForSubmit({ selectedQueryIndices: [], summary: undefined, summaryMeta: undefined }, pc.searchResults);
+							const resolvedSummary = await resolveSummaryForSubmit({ selectedQueryIndices: [], summary: undefined, summaryMeta: undefined }, pc.searchResults);
 							const all = collectAllResultsAndUrls(pc.searchResults);
 							const filteredInline = pc.allInlineContent.filter(c => all.urls.includes(c.url));
 							pc.finish(buildSearchReturn({
@@ -1083,7 +1078,7 @@ export default function (pi: ExtensionAPI) {
 							? pc.searchProvider
 							: normalizedProvider;
 						try {
-							const { answer, results, inlineContent, provider: actualProvider } = await search(query, {
+							const { answer, results, inlineContent, provider: actualProvider } = await (await loadGeminiSearch()).search(query, {
 								provider: requestedProvider,
 								numResults: pc.numResults,
 								recencyFilter: pc.recencyFilter,
@@ -1229,7 +1224,7 @@ export default function (pi: ExtensionAPI) {
 		sessionActive = false;
 		abortPendingFetches();
 		closeCurator();
-		clearCloneCache();
+		void loadGithubExtract().then((m) => m.clearCloneCache()).catch(() => {});
 		clearResults();
 		// Unsubscribe before clear() to avoid callback with stale ctx
 		widgetUnsubscribe?.();
@@ -1386,7 +1381,7 @@ export default function (pi: ExtensionAPI) {
 					});
 					const requestedProvider = pc.searchProvider;
 					try {
-						const { answer, results, inlineContent, provider } = await search(queryList[qi], {
+						const { answer, results, inlineContent, provider } = await (await loadGeminiSearch()).search(queryList[qi], {
 							provider: requestedProvider,
 							numResults: params.numResults,
 							recencyFilter: params.recencyFilter,
@@ -1469,7 +1464,7 @@ export default function (pi: ExtensionAPI) {
 				});
 
 				try {
-					const { answer, results, inlineContent, provider } = await search(query, {
+					const { answer, results, inlineContent, provider } = await (await loadGeminiSearch()).search(query, {
 						provider: resolvedProvider,
 						numResults: params.numResults,
 						recencyFilter: params.recencyFilter,
@@ -1515,6 +1510,7 @@ export default function (pi: ExtensionAPI) {
 					isProjectTrusted: () => ctx.isProjectTrusted(),
 				};
 				const summaryModelChoices = await loadSummaryModelChoices(summaryContext);
+				const { generateSummaryDraft } = await loadSummaryReview();
 				const generated = await generateSummaryDraft(searchResults, summaryContext, signal, summaryModelChoices.defaultSummaryModel ?? undefined);
 				approvedSummary = generated.summary;
 				summaryMeta = generated.meta;
@@ -1828,6 +1824,7 @@ export default function (pi: ExtensionAPI) {
 				details: { phase: "fetch", progress: 0 },
 			});
 
+			const { fetchAllContent } = await loadExtract();
 			const fetchResults = await fetchAllContent(urlList, signal, options);
 			const successful = fetchResults.filter((r) => !r.error).length;
 			const totalChars = fetchResults.reduce((sum, r) => sum + r.content.length, 0);
@@ -2253,7 +2250,7 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			try {
-				const handle = await startCuratorServer(
+				const handle = await (await loadCuratorServer()).startCuratorServer(
 					{
 						queries,
 						sessionToken,
@@ -2294,7 +2291,7 @@ export default function (pi: ExtensionAPI) {
 								curatedFrom: collected.size,
 							};
 							if (!payload.rawResults) {
-								const resolvedSummary = resolveSummaryForSubmit(payload, collected);
+								const resolvedSummary = await resolveSummaryForSubmit(payload, collected);
 								base.workflow = "summary-review";
 								base.approvedSummary = resolvedSummary.approvedSummary;
 								base.summaryMeta = resolvedSummary.summaryMeta;
@@ -2308,7 +2305,7 @@ export default function (pi: ExtensionAPI) {
 							searchAbort.abort();
 							if (reason === "timeout") {
 								const all = collectAllResultsAndUrls(collected);
-								const resolvedSummary = resolveSummaryForSubmit({ selectedQueryIndices: [], summary: undefined, summaryMeta: undefined }, collected);
+								const resolvedSummary = await resolveSummaryForSubmit({ selectedQueryIndices: [], summary: undefined, summaryMeta: undefined }, collected);
 								sendFollowUpFromReturn(buildSearchReturn({
 									queryList: all.results.map(r => r.query),
 									results: all.results,
@@ -2345,7 +2342,7 @@ export default function (pi: ExtensionAPI) {
 								? currentSearchProvider
 								: normalizedProvider;
 							try {
-								const { answer, results, provider: actualProvider } = await search(query, {
+								const { answer, results, provider: actualProvider } = await (await loadGeminiSearch()).search(query, {
 									provider: requestedProvider,
 									signal: searchAbort.signal,
 									extensionContext: ctx,
@@ -2418,7 +2415,7 @@ export default function (pi: ExtensionAPI) {
 							if (aborted || !isCommandActive()) break;
 							const requestedProvider = currentSearchProvider;
 							try {
-								const { answer, results, provider } = await search(queries[qi], {
+								const { answer, results, provider } = await (await loadGeminiSearch()).search(queries[qi], {
 									provider: requestedProvider,
 									signal: searchAbort.signal,
 									extensionContext: ctx,
@@ -2505,6 +2502,7 @@ export default function (pi: ExtensionAPI) {
 				return;
 			}
 
+			const { isGeminiWebAvailable, getActiveGoogleEmail } = await loadGeminiWeb();
 			const cookies = await isGeminiWebAvailable();
 			if (!cookies) {
 				pi.sendMessage({
