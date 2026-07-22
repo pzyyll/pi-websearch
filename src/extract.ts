@@ -1,8 +1,6 @@
 // ABOUTME: URL content extraction pipeline for fetch_content and inline search enrichment.
 // ABOUTME: Defers heavy npm deps and feature modules until the matching URL branch runs.
 
-/// <reference path="./turndown.d.ts" />
-
 import pLimit from "p-limit";
 import { activityMonitor } from "./activity.ts";
 import { existsSync, readFileSync } from "node:fs";

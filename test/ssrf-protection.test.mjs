@@ -199,7 +199,7 @@ test("invalid allowRanges entries throw a descriptive error", async () => {
   for (const bad of ["not-an-ip", "198.18.0.0/33", "198.18.0.0/-1", "999.0.0.0/8", "fd00::/129"]) {
     await assert.rejects(
       validateRemoteUrl("http://198.18.0.5/", { allowRanges: [bad] }),
-      new RegExp(`Invalid CIDR notation in ssrf\.allowRanges: "${bad.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\$&")}"`),
+      new RegExp(`Invalid CIDR notation in ssrf.allowRanges: "${bad.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\$&")}"`),
     );
   }
   await assert.rejects(

@@ -310,7 +310,7 @@ interface PendingCurate {
 const MAX_INLINE_CONTENT = 30000; // Content returned directly to agent
 
 function stripThumbnails(results: ExtractedContent[]): ExtractedContent[] {
-  return results.map(({ thumbnail, frames, ...rest }) => rest);
+  return results.map(({ thumbnail: _thumbnail, frames: _frames, ...rest }) => rest);
 }
 
 function formatSearchSummary(results: SearchResult[], answer: string): string {
@@ -1213,20 +1213,6 @@ export default function (pi: ExtensionAPI) {
       }
       if (searchesComplete) handle.searchesDone();
 
-      const sendCuratorFallbackUpdate = (message: string) => {
-        pc.onUpdate?.({
-          content: [{ type: "text", text: `${message}\nOpen manually: ${handle.url}` }],
-          details: {
-            phase: "curator-fallback",
-            progress: searchesComplete ? 1 : 0.5,
-            curatorUrl: handle.url,
-            timeoutSeconds: pc.timeoutSeconds,
-            shortcut: curateKey,
-            browserOpenError: pc.browserOpenError,
-          },
-        });
-      };
-
       pc.onUpdate?.({
         content: [
           {
@@ -1267,7 +1253,22 @@ export default function (pi: ExtensionAPI) {
       console.error(`Failed to open curator UI: ${message}`);
       if (handle && activeCurators.get(callId) === handle && pendingCurates.get(callId) === pc) {
         pc.browserOpenError = message;
-        sendCuratorFallbackUpdate("Search curator is running, but the browser did not open automatically.");
+        pc.onUpdate?.({
+          content: [
+            {
+              type: "text",
+              text: `Search curator is running, but the browser did not open automatically.\nOpen manually: ${handle.url}`,
+            },
+          ],
+          details: {
+            phase: "curator-fallback",
+            progress: searchesComplete ? 1 : 0.5,
+            curatorUrl: handle.url,
+            timeoutSeconds: pc.timeoutSeconds,
+            shortcut: curateKey,
+            browserOpenError: pc.browserOpenError,
+          },
+        });
       } else if (pendingCurates.get(callId) === pc || (handle && activeCurators.get(callId) === handle)) {
         closeCurator(callId);
       }
@@ -2408,7 +2409,6 @@ export default function (pi: ExtensionAPI) {
       const availableProviders = bootstrap.availableProviders;
       const initialProvider = bootstrap.defaultProvider;
       const curatorTimeoutSeconds = bootstrap.timeoutSeconds;
-      let currentProvider = initialProvider;
       const rawSearchProvider = normalizeProviderInput(loadConfig().provider ?? "auto") ?? "auto";
       let currentSearchProvider = rawSearchProvider === "auto" ? "auto" : initialProvider;
       const summaryContext: SummaryGenerationContext = {
@@ -2522,7 +2522,6 @@ export default function (pi: ExtensionAPI) {
               if (commandHandle && !isCommandActive()) return;
               const normalized = normalizeProviderInput(provider);
               if (!normalized || normalized === "auto") return;
-              currentProvider = normalized;
               currentSearchProvider = normalized;
               try {
                 saveConfig({ provider: normalized });

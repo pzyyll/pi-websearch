@@ -1,0 +1,6 @@
+# ABOUTME: Project toolchain versions managed by mise (https://mise.en.dev).
+# ABOUTME: After clone: `mise trust` (once) then `mise install`.
+
+[tools]
+# Match active local toolchain; consumers only need a modern Node (see package.json engines).
+node = "26.3.0"
