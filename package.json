@@ -19,16 +19,16 @@
     "fetch",
     "scraping"
   ],
-  "author": "Nico Bailon",
+  "author": "pzyyll",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nicobailon/pi-web-access.git"
+    "url": "git+https://github.com/pzyyll/pi-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/nicobailon/pi-web-access/issues"
+    "url": "https://github.com/pzyyll/pi-mcp/issues"
   },
-  "homepage": "https://github.com/nicobailon/pi-web-access#readme",
+  "homepage": "https://github.com/pzyyll/pi-mcp#readme",
   "files": [
     "dist",
     "skills",
