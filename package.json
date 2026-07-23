@@ -33,8 +33,7 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "prepublishOnly": "npm run build",
-    "postinstall": "npm run prepublishOnly",
+    "postinstall": "npm run build",
     "test": "node --test",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -46,13 +45,13 @@
     "@mozilla/readability": "^0.6.0",
     "linkedom": "^0.16.0",
     "p-limit": "^6.1.0",
+    "tsdown": "^0.22.13",
     "turndown": "^7.2.0",
     "unpdf": "^1.6.2"
   },
   "devDependencies": {
     "oxfmt": "^0.60.0",
-    "oxlint": "^1.75.0",
-    "tsdown": "^0.22.13"
+    "oxlint": "^1.75.0"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
@@ -70,6 +69,6 @@
     "skills": [
       "./skills"
     ],
-    "video": "https://github.com/nicobailon/pi-web-access/raw/refs/heads/main/pi-web-fetch-demo.mp4"
+    "video": "https://github.com/pzyyll/pi-websearch/raw/refs/heads/main/pi-web-fetch-demo.mp4"
   }
 }
