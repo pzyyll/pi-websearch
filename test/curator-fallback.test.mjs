@@ -28,7 +28,7 @@ test("manual websearch command reports browser-open fallback without closing cur
   assert.match(indexSrc, /let browserOpenError: string \| null = null;/);
   assert.match(
     indexSrc,
-    /ctx\.ui\.notify\(`Search curator is running, but the browser did not open automatically\. Open manually: \$\{handle\.url\}`/,
+    /ctx\.ui\.notify\(\s*`Search curator is running, but the browser did not open automatically\. Open manually: \$\{handle\.url\}`,\s*"info",\s*\)/,
   );
   assert.match(indexSrc, /if \(queries\.length > 0\) \{/);
 });

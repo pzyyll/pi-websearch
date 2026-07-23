@@ -6,10 +6,10 @@ const indexSrc = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8
 const readmeSrc = readFileSync(new URL("../README.md", import.meta.url), "utf8");
 
 test("web_search registration is gated by webSearch.enabled", () => {
-  assert.match(indexSrc, /webSearch\?: \{\n\t\tenabled\?: boolean;\n\t\};/);
+  assert.match(indexSrc, /webSearch\?: \{\n\s+enabled\?: boolean;\n\s+\};/);
   assert.match(
     indexSrc,
-    /if \(initConfig\.webSearch\?\.enabled !== false\) pi\.registerTool\(\{\n\t\tname: "web_search"/,
+    /if \(initConfig\.webSearch\?\.enabled !== false\)\s*pi\.registerTool\(\{\n\s+name: "web_search"/,
   );
 });
 
@@ -18,7 +18,7 @@ test("fetch tools remain registered outside the web_search gate", () => {
   const fetchIndex = indexSrc.indexOf('name: "fetch_content"');
   assert.ok(gateIndex >= 0, "web_search gate not found");
   assert.ok(fetchIndex > gateIndex, "fetch_content registration should remain after web_search gate");
-  assert.match(indexSrc, /\n\t}\);\n\n\tpi\.registerTool\(\{\n\t\tname: "fetch_content"/);
+  assert.match(indexSrc, /\n\s+}\);\n\n\s+pi\.registerTool\(\{\n\s+name: "fetch_content"/);
 });
 
 test("README documents webSearch.enabled", () => {
