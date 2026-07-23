@@ -59,18 +59,15 @@ function hasStaticValueImport(source, modulePath) {
 }
 
 function hasStaticNpmImport(source, pkg) {
-  const re = new RegExp(
-    String.raw`^\s*import\s+(?!type\b)[\s\S]*?from\s*["']${pkg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`,
-    "m",
-  );
-  // Prefer line-scan for accuracy with comments
+  // Line-scan only. A multiline import regex can false-positive by spanning from an
+  // earlier value import to a later type-only from "pkg" clause.
   for (const line of source.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed.startsWith("import ")) continue;
     if (trimmed.startsWith("import type ")) continue;
     if (trimmed.includes(`"${pkg}"`) || trimmed.includes(`'${pkg}'`)) return true;
   }
-  return re.test(source);
+  return false;
 }
 
 const INDEX_DENYLIST = [
@@ -109,6 +106,15 @@ test("index.ts has no static value imports of heavy modules", () => {
   // Type-only extract / curator-server / summary-review are allowed
   assert.match(indexSrc, /import type \{ ExtractedContent \} from "\.\/extract\.ts"/);
   assert.match(indexSrc, /import type \{ CuratorServerHandle \} from "\.\/curator-server\.ts"/);
+});
+
+test("index.ts does not static-import pi-ai runtime values", () => {
+  // Type-only Model is fine; complete/StringEnum must stay off the cold path.
+  assert.equal(hasStaticNpmImport(indexSrc, "@earendil-works/pi-ai/compat"), false);
+  assert.equal(hasStaticNpmImport(indexSrc, "@earendil-works/pi-ai"), false);
+  assert.match(indexSrc, /import type \{ Model \} from "@earendil-works\/pi-ai\/compat"/);
+  assert.match(indexSrc, /import\("@earendil-works\/pi-ai\/compat"\)/);
+  assert.doesNotMatch(indexSrc, /\bStringEnum\b/);
 });
 
 test("gemini-search.ts has no static provider value imports", () => {

@@ -14,8 +14,30 @@ test("pi.extensions points at compiled dist entry", () => {
   assert.deepEqual(pkg.pi?.extensions, ["./dist/index.js"]);
 });
 
-test("package.json has build scripts", () => {
+test("package.json has build scripts and slim install footprint", () => {
   assert.equal(pkg.scripts?.build, "tsdown");
+  assert.equal(pkg.scripts?.postinstall, "node scripts/ensure-dist.mjs");
+  // Build toolchain must not ship as a runtime dependency (inflates install + cold resolve).
+  assert.equal(pkg.dependencies?.tsdown, undefined);
+  assert.ok(pkg.devDependencies?.tsdown, "tsdown should live in devDependencies");
+  // Host-provided peers should not be auto-installed into the extension tree.
+  for (const peer of [
+    "@earendil-works/pi-ai",
+    "@earendil-works/pi-coding-agent",
+    "@earendil-works/pi-tui",
+    "typebox",
+  ]) {
+    assert.equal(pkg.peerDependenciesMeta?.[peer]?.optional, true, `${peer} should be optional peer`);
+  }
+});
+
+test("dist entry does not static-import pi-ai runtime values", () => {
+  const entry = join(root, "dist", "index.js");
+  assert.ok(existsSync(entry), "dist/index.js missing — run npm run build");
+  const src = readFileSync(entry, "utf8");
+  assert.doesNotMatch(src, /from\s*["'`]@earendil-works\/pi-ai(?:\/compat)?["'`]/);
+  // Minified builds may use import(`@earendil-works/pi-ai/compat`) for rewrite path only.
+  assert.match(src, /import\(["'`]@earendil-works\/pi-ai\/compat["'`]\)/);
 });
 
 test("dist/index.js exists after build and keeps dynamic import chunks", () => {

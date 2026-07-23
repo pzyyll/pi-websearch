@@ -4,7 +4,7 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Box, Text, truncateToWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import { StringEnum, complete, type Model } from "@earendil-works/pi-ai/compat";
+import type { Model } from "@earendil-works/pi-ai/compat";
 import type { ExtractedContent } from "./extract.ts";
 import { normalizeFetchContentParams } from "./fetch-params.ts";
 import type { SearchProvider, ResolvedSearchProvider, SearchResult } from "./search-types.ts";
@@ -43,6 +43,14 @@ import { buildSearchErrorPlan, type SearchErrorDetails, type SearchErrorPlan } f
 import { loadEnabledModelPatterns, modelMatchesEnabledPatterns } from "./summary-model-scope.ts";
 
 const WEB_SEARCH_CONFIG_PATH = getWebSearchConfigPath();
+
+/** Local string-enum schema helper so the entry does not static-import pi-ai enum helpers. */
+function stringEnum<const T extends string>(values: readonly T[], options?: { description?: string }) {
+  return Type.Union(
+    values.map((value) => Type.Literal(value)),
+    options,
+  );
+}
 
 /** Shared collapsed/expanded renderer for an error/cancel plan produced by
  * buildSearchErrorPlan(). Used by every tool renderResult's error branch so
@@ -739,6 +747,7 @@ export default function (pi: ExtensionAPI) {
       { provider: "google", id: "gemini-2.5-flash" },
       { provider: "openai", id: "gpt-4.1-mini" },
     ]);
+    const { complete } = await import("@earendil-works/pi-ai/compat");
     const response = await complete(
       model,
       {
@@ -1346,18 +1355,18 @@ export default function (pi: ExtensionAPI) {
         numResults: Type.Optional(Type.Number({ description: "Results per query (default: 5, max: 20)" })),
         includeContent: Type.Optional(Type.Boolean({ description: "Fetch full page content (async)" })),
         recencyFilter: Type.Optional(
-          StringEnum(["day", "week", "month", "year"], { description: "Filter by recency" }),
+          stringEnum(["day", "week", "month", "year"], { description: "Filter by recency" }),
         ),
         domainFilter: Type.Optional(
           Type.Array(Type.String(), { description: "Limit to domains (prefix with - to exclude)" }),
         ),
         provider: Type.Optional(
-          StringEnum(["auto", "openai", "brave", "parallel", "tavily", "exa", "perplexity", "gemini"], {
+          stringEnum(["auto", "openai", "brave", "parallel", "tavily", "exa", "perplexity", "gemini"], {
             description: "Search provider (default: auto)",
           }),
         ),
         workflow: Type.Optional(
-          StringEnum(["none", "summary-review", "auto-summary"], {
+          stringEnum(["none", "summary-review", "auto-summary"], {
             description:
               "Search workflow mode: none = no curator, summary-review = open curator with auto summary draft (default), auto-summary = generate summary without opening curator",
           }),
