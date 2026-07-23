@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Deferred heavy search/extract/curator modules and npm deps (`linkedom`, Readability, Turndown, provider clients, `curator-page`) behind cached dynamic imports so extension cold-start no longer evaluates the full feature graph at module load.
 - Prebuild the extension with `tsdown` to `dist/` and point `pi.extensions` at `./dist/index.js` so Pi loads compiled ESM (with lazy chunks) instead of jiti-transpiling TypeScript sources at boot. Run `npm run build` after source changes.
-- Ship prebuilt `dist/` in git and make `postinstall` a no-op when the entry already exists (`scripts/ensure-dist.mjs`), so installs no longer force a full rebuild.
+- Ship prebuilt `dist/` in git; drop `postinstall` rebuild. Run `npm run build` after source changes.
 - Move `tsdown` to `devDependencies` and mark host packages as optional peers to stop npm auto-installing a nested `pi-coding-agent` / AI-SDK tree (~200MB+) under the extension.
 - Drop eager `@earendil-works/pi-ai` value imports from the extension entry (`StringEnum` → local `typebox` union; `complete` loads on first query rewrite).
 

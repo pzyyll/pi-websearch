@@ -24,7 +24,6 @@
   },
   "files": [
     "dist",
-    "scripts/ensure-dist.mjs",
     "skills",
     "README.md",
     "LICENSE",
@@ -34,7 +33,6 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "postinstall": "node scripts/ensure-dist.mjs",
     "test": "node --test",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",

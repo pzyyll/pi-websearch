@@ -16,7 +16,7 @@ test("pi.extensions points at compiled dist entry", () => {
 
 test("package.json has build scripts and slim install footprint", () => {
   assert.equal(pkg.scripts?.build, "tsdown");
-  assert.equal(pkg.scripts?.postinstall, "node scripts/ensure-dist.mjs");
+  assert.equal(pkg.scripts?.postinstall, undefined);
   // Build toolchain must not ship as a runtime dependency (inflates install + cold resolve).
   assert.equal(pkg.dependencies?.tsdown, undefined);
   assert.ok(pkg.devDependencies?.tsdown, "tsdown should live in devDependencies");
